@@ -1,0 +1,18 @@
+subprojects {
+
+    apply plugin: 'java'
+
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        testCompile group: 'junit', name: 'junit', version: '4.+'
+    }
+
+}
+
+ext {
+    GROUP = 'com.divinecloud'
+    VERSION_NAME = "1.4.1"
+}
