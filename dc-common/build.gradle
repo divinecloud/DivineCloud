@@ -1,0 +1,8 @@
+group rootProject.ext.GROUP
+version rootProject.ext.VERSION_NAME
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'Divine Cloud Common', 'Implementation-Version': version
+    }
+}
