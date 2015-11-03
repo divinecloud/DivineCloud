@@ -115,15 +115,16 @@ public class RunBookApiImpl implements RunBookApi {
         List<DtProperty> properties = readProperties(propertiesFile);
         String jsonProperties = null;
 
-        if(propertiesFile.getName().endsWith(".json")) {
-            try {
-                jsonProperties = new String(Files.readAllBytes(Paths.get(propertiesFile.getAbsolutePath())));
-            } catch (IOException e) {
-                throw new RunBookException("Cannot read json properties file : " + propertiesFile.getAbsolutePath(), e);
+        if(propertiesFile != null) {
+            if (propertiesFile.getName().endsWith(".json")) {
+                try {
+                    jsonProperties = new String(Files.readAllBytes(Paths.get(propertiesFile.getAbsolutePath())));
+                } catch (IOException e) {
+                    throw new RunBookException("Cannot read json properties file : " + propertiesFile.getAbsolutePath(), e);
+                }
+            } else {
+                properties = readProperties(propertiesFile);
             }
-        }
-        else {
-            properties = readProperties(propertiesFile);
         }
 
         String executionId = generateExecutionId();
