@@ -3,7 +3,7 @@ version rootProject.ext.VERSION_NAME
 
 jar {
     manifest {
-        attributes 'Implementation-Title': 'Divine Cloud Common', 'Implementation-Version': version
+        attributes 'Implementation-Title': 'Divine Cloud SSH package', 'Implementation-Version': version
     }
 }
 
