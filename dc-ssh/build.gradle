@@ -8,7 +8,6 @@ jar {
 }
 
 dependencies {
-    compile project(':dc-common')
     compile project(':dc-util')
 
     compile 'com.jcraft:jsch:0.1.51'

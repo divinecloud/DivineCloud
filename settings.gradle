@@ -1,8 +1,8 @@
 rootProject.name = 'DivineCloud'
 
-include 'dc-util'
-
 include 'dc-common'
+
+include 'dc-util'
 
 include 'dc-ssh'
 

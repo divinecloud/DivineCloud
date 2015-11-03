@@ -8,6 +8,8 @@ jar {
 }
 
 dependencies {
+    compile project(':dc-common')
+
     compile 'commons-io:commons-io:2.0.1'
     compile 'commons-codec:commons-codec:1.9'
 }
