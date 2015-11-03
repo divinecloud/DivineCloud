@@ -1,0 +1,70 @@
+# This RunBook file generated using Divine Terminal. To download Free Edition of Divine Terminal go to www.divineterminal.com
+!RunBook
+generatedPropertiesFilePath: ''
+groupSteps: false
+name: DT Run Book
+properties:
+- defaultValue: ''
+  multiSelect: ''
+  name: p1
+  required: false
+  type: Text
+- defaultValue: ''
+  multiSelect: ''
+  name: p2
+  required: false
+  type: Text
+- defaultValue: ''
+  multiSelect: A,B,C
+  name: p3
+  required: false
+  type: Select
+references: ''
+releaseName: ''
+releaseVersion: ''
+sequence: 4
+stepGroupsName: ''
+steps:
+- answersRequired: false
+  fileIncludes: ''
+  fileIncludesDestinationFolder: ''
+  generatedPropertiesFilePath: ''
+  id: Id3N
+  idempotent: false
+  item: !PropertiesTransferItem
+    path: /tmp/properties.json
+    reboot: false
+  itemType: PropertiesTransfer
+  name: Run Book Step
+  nodesImportFilePath: ''
+  replaceProperties: false
+- answersRequired: false
+  fileIncludes: ''
+  fileIncludesDestinationFolder: ''
+  generatedPropertiesFilePath: ''
+  id: Id0e
+  idempotent: false
+  item: !CommandItem
+    command: echo Sample Json Properties RunBook
+    reboot: false
+  itemType: Command
+  name: Run Book Step
+  nodesImportFilePath: ''
+  replaceProperties: false
+- answersRequired: false
+  fileIncludes: ''
+  fileIncludesDestinationFolder: ''
+  generatedPropertiesFilePath: ''
+  id: Id2a
+  idempotent: false
+  item: !CommandItem
+    command: cat /tmp/properties.json
+    reboot: false
+  itemType: Command
+  name: Run Book Step
+  nodesImportFilePath: ''
+  replaceProperties: false
+summary: ''
+supportedOs: ''
+utilityMode: false
+version: '1.0'

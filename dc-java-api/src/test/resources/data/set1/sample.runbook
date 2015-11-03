@@ -1,0 +1,58 @@
+# This RunBook file generated using Divine Terminal. To download Free Edition of Divine Terminal go to www.divineterminal.com
+!RunBook
+generatedPropertiesFilePath: ''
+groupSteps: false
+name: Sample RunBook
+properties:
+- defaultValue: ''
+  multiSelect: ''
+  name: sample.key1
+  required: false
+  type: Text
+references: ''
+releaseName: ''
+releaseVersion: ''
+sequence: 2
+stepGroupsName: ''
+steps:
+- answersRequired: false
+  fileIncludes: ''
+  fileIncludesDestinationFolder: ''
+  generatedPropertiesFilePath: ''
+  id: Id0R
+  idempotent: false
+  item: !ScriptItem
+    arguments: ''
+    invokingProgram: sh
+    language: Shell
+    reboot: false
+    script: |-
+      echo "Sample RunBook"
+      echo sample.key1
+  itemType: Script
+  name: Run Book Step
+  nodesImportFilePath: ''
+  replaceProperties: true
+- answersRequired: false
+  fileIncludes: ''
+  fileIncludesDestinationFolder: ''
+  generatedPropertiesFilePath: ''
+  id: Id1t
+  idempotent: false
+  item: !CommandItem
+    command: echo sample.key2
+    reboot: false
+  itemType: Command
+  name: Run Book Step
+  nodesImportFilePath: ''
+  properties:
+  - defaultValue: ''
+    multiSelect: ''
+    name: sample.key2
+    required: false
+    type: Text
+  replaceProperties: true
+summary: ''
+supportedOs: ''
+utilityMode: false
+version: '1.0'

@@ -8,3 +8,5 @@ include 'dc-ssh'
 
 include 'dc-runbook'
 
+include 'dc-java-api'
+

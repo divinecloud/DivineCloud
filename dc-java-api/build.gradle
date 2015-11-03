@@ -1,0 +1,12 @@
+group rootProject.ext.GROUP
+version rootProject.ext.VERSION_NAME
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'Divine Cloud Java API package', 'Implementation-Version': version
+    }
+}
+
+dependencies {
+    compile project(':dc-runbook')
+}

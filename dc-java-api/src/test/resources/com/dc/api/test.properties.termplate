@@ -1,0 +1,12 @@
+server1.host=
+server1.username=
+server1.password=
+server2.host=
+server2.username=
+server2.key=
+transient.server1.host=
+transient.server1.hostname=
+transient.server1.username=
+transient.server1.password=
+test.data.path=
+test.temp.folder=

@@ -1,0 +1,74 @@
+# This RunBook file generated using Divine Terminal. To download Free Edition of Divine Terminal go to www.divineterminal.com
+!RunBook
+groupSteps: false
+name: DT Run Book
+references: '<i style="color: #c8c8c8;">No references provided.</i>'
+sequence: 15
+steps:
+- answersRequired: false
+  fileIncludes: ''
+  fileIncludesDestinationFolder: ''
+  generatedPropertiesFilePath: ''
+  id: Id0P
+  idempotent: false
+  item: !ScriptItem
+    arguments: ''
+    description: '<i style="color: #c8c8c8;">No description provided.</i>'
+    invokingProgram: sh
+    language: Shell
+    reboot: false
+    script: |-
+      echo "HOST:${SERVER.HOST.1},ID:${SERVER.HOST.1},NAME:ServerHost1,UNIQUE_ID:${SERVER.HOST.1},TEMP:Y,CREDENTIALS_NAME:TEST_CRED,DYNAMIC_TAGS:DTAG1" > /tmp/nodes-import.txt
+
+      echo "Nodes Import File Created"
+  itemType: Script
+  name: Run Book Step
+  nodesImportFilePath: /tmp/nodes-import.txt
+  properties:
+  - defaultValue: ''
+    multiSelect: ''
+    name: ${SERVER.HOST.1}
+    required: true
+    type: Text
+  - defaultValue: ''
+    multiSelect: ''
+    name: ${TEST_CRED}
+    required: true
+    type: Text
+  replaceProperties: true
+- answersRequired: false
+  dynamicNodeTags:
+  - DTAG1
+  generatedPropertiesFilePath: ''
+  id: Id1U
+  idempotent: false
+  item: !ScriptItem
+    arguments: ''
+    description: '<i style="color: #c8c8c8;">No description provided.</i>'
+    invokingProgram: sh
+    language: Shell
+    reboot: false
+    script: |-
+      echo "Hello Dynamic Nodes World"
+      hostname
+  itemType: Script
+  name: Run Book Step
+  nodesImportFilePath: ''
+  replaceProperties: false
+- answersRequired: false
+  generatedPropertiesFilePath: ''
+  id: Id2w
+  idempotent: false
+  item: !CommandItem
+    command: echo "Sample Step"
+    description: '<i style="color: #c8c8c8;">No description provided.</i>'
+    reboot: false
+  itemType: Command
+  name: Run Book Step
+  nodesImportFilePath: ''
+  replaceProperties: false
+successfulCompletionMessage: Dynamic Nodes Execution Successfull.
+summary: '<i style="color: #c8c8c8;">No summary provided.</i>'
+supportedOs: ''
+utilityMode: false
+version: '1.0'
