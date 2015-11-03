@@ -1,0 +1,22 @@
+group rootProject.ext.GROUP
+version rootProject.ext.VERSION_NAME
+
+jar {
+    manifest {
+        attributes 'Implementation-Title': 'Divine Cloud Runbook package', 'Implementation-Version': version
+    }
+}
+
+dependencies {
+    compile project(':dc-common')
+    compile project(':dc-util')
+    compile project(':dc-ssh')
+
+    compile 'org.yaml:snakeyaml:1.15'
+    compile 'com.fasterxml.jackson.core:jackson-core:2.5.1'
+    compile 'com.fasterxml.jackson.core:jackson-databind:2.5.1'
+    compile 'com.fasterxml.jackson.core:jackson-annotations:2.5.1'
+    compile 'org.apache.httpcomponents:httpcore:4.4.3'
+    compile 'org.apache.httpcomponents:httpclient:4.5'
+    compile 'org.eclipse.jgit:org.eclipse.jgit:3.7.0.201502260915-r'
+}

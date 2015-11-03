@@ -6,3 +6,8 @@ jar {
         attributes 'Implementation-Title': 'Divine Cloud Utils', 'Implementation-Version': version
     }
 }
+
+dependencies {
+    compile 'commons-io:commons-io:2.0.1'
+    compile 'commons-codec:commons-codec:1.9'
+}
