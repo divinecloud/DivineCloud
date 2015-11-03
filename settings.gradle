@@ -4,3 +4,5 @@ include 'dc-util'
 
 include 'dc-common'
 
+include 'dc-ssh'
+
