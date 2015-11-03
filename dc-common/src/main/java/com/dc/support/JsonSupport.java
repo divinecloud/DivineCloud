@@ -1,6 +1,7 @@
 package com.dc.support;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -37,29 +38,17 @@ public class JsonSupport {
 		return json;
 	}
 
-	public static void main(String srgs[]) {
-		Map<String, String> map = new HashMap<>();
-
-		map.put("key1", "value1");
-		map.put("key2", "value2");
-		map.put("key3", "value3");
-		map.put("key4", "value4");
-
-		//System.out.println(convertToOutputMapString(map));
-
-
+    public static Map toStringMap(String json) {
+        Map map = null;
+        TypeReference<HashMap> typeRef = new TypeReference<HashMap>() {
+        };
         try {
-            long startTime = System.nanoTime();
-            ObjectMapper	objMapper	= new ObjectMapper();
-            long endTime = System.nanoTime();
-            System.out.println("Total Time : " + (endTime - startTime));
-            String json = objMapper.writeValueAsString(map);
-            System.out.println(json);
-
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            map = mapper.readValue(json.getBytes(), typeRef);
+        } catch (IOException e) {
+            throw new RuntimeException("Error occurred while converting json to map.", e);
         }
 
+        return map;
     }
 
 	public static String convertToOutputMapString(Map<String, String> map) {
