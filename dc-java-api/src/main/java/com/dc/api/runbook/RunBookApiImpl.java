@@ -1,19 +1,3 @@
-/*
- * Copyright (C) 2014 Divine Cloud Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.dc.api.runbook;
 
 
@@ -35,6 +19,7 @@ import com.dc.runbook.rt.domain.DtProperty;
 import com.dc.runbook.rt.domain.DtRunbook;
 import com.dc.runbook.rt.domain.TransformedRunBook;
 import com.dc.runbook.rt.exec.*;
+import com.dc.runbook.rt.exec.output.OutputFileStore;
 import com.dc.ssh.client.exec.SshClient;
 import com.dc.ssh.client.exec.cmd.script.ScriptLanguage;
 import com.dc.ssh.client.exec.vo.Credential;
@@ -43,6 +28,7 @@ import com.dc.ssh.client.support.CredentialsFileParser;
 import com.dc.ssh.client.support.NodeCredentialsFileParser;
 import com.dc.util.batch.BatchExecutorService;
 import com.dc.util.batch.BatchUnitTask;
+import com.dc.util.condition.ConditionalBarrier;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -110,21 +96,80 @@ public class RunBookApiImpl implements RunBookApi {
     }
 
     @Override
+    public void execute(File nodesPerStepFile, File runbookFile, File outputFile, File credentialsProviderFile, File propertiesFile, boolean emitOutput) {
+        OutputFileStore fileStore = new OutputFileStore(outputFile);
+        RunBook runBook = RunBookReader.read(runbookFile);
+        List<DtProperty> properties = readProperties(propertiesFile);
+        String jsonProperties = null;
+
+        if(propertiesFile.getName().endsWith(".json")) {
+            try {
+                jsonProperties = new String(Files.readAllBytes(Paths.get(propertiesFile.getAbsolutePath())));
+            } catch (IOException e) {
+                throw new RunBookException("Cannot read json properties file : " + propertiesFile.getAbsolutePath(), e);
+            }
+        }
+        else {
+            properties = readProperties(propertiesFile);
+        }
+
+        String executionId = generateExecutionId();
+        setDefaultsForRunBook(runBook);
+        TransformedRunBook transformedRunBook = DtRunBookConverter.convert(runBook);
+        if(jsonProperties != null) {
+            transformedRunBook.setPropertiesJson(jsonProperties);
+        }
+
+        DtRunbook dtRunbook = convertToDtRunbook(transformedRunBook, properties);
+        String nodesCredText;
+        CredentialsProvider credentialsProvider = null;
+        try {
+            nodesCredText = new String(Files.readAllBytes(Paths.get(nodesPerStepFile.getAbsolutePath())));
+        } catch (IOException e) {
+            throw new DcException("Cannot read Nodes Cred File : " + nodesPerStepFile.getAbsolutePath(), e);
+        }
+        List<List<NodeCredentials>> nodesPerStep = NodeCredentialsFileParser.parse(nodesCredText);
+
+        String credsText;
+
+        try {
+            credsText = new String(Files.readAllBytes(Paths.get(credentialsProviderFile.getAbsolutePath())));
+            Map<String, Credential> credentialMap = CredentialsFileParser.parse(credsText);
+            if(credentialMap != null) {
+                credentialsProvider = new FileBasedCredentialsProvider(credentialMap);
+            }
+
+        } catch (IOException e) {
+            throw new DcException("Cannot read Cred File : " + credentialsProviderFile.getAbsolutePath(), e);
+        }
+
+        Map<String, List<String>> nodesMap = listToMap(nodesPerStep);
+
+        //Map<String, SshClient> sshClientMap = generateSshClientMap(nodesPerStep, executionId);
+        ConditionalBarrier<String> barrier = new ConditionalBarrier<>();
+        String blockingKey = "RunBookExecCompleteBlock-" + executionId;
+        RunBookApiCallback callback = new RunBookApiCallback(dtRunbook, executionId, fileStore, transformedRunBook, barrier, blockingKey, emitOutput);
+
+        execute(executionId, nodesPerStep, runBook, callback, credentialsProvider, properties);
+
+        barrier.block(blockingKey);
+    }
+
+    @Override
     public String execute(List<List<NodeCredentials>> nodesPerStep, File runbookFile, RunbookCallback callback, File propertiesFile) {
         RunBook runBook = RunBookReader.read(runbookFile);
         List<DtProperty> properties = readProperties(propertiesFile);
         String jsonProperties = null;
 
-        if(propertiesFile != null) {
-            if (propertiesFile.getName().endsWith(".json")) {
-                try {
-                    jsonProperties = new String(Files.readAllBytes(Paths.get(propertiesFile.getAbsolutePath())));
-                } catch (IOException e) {
-                    throw new RunBookException("Cannot read json properties file : " + propertiesFile.getAbsolutePath(), e);
-                }
-            } else {
-                properties = readProperties(propertiesFile);
+        if(propertiesFile.getName().endsWith(".json")) {
+            try {
+                jsonProperties = new String(Files.readAllBytes(Paths.get(propertiesFile.getAbsolutePath())));
+            } catch (IOException e) {
+                throw new RunBookException("Cannot read json properties file : " + propertiesFile.getAbsolutePath(), e);
             }
+        }
+        else {
+            properties = readProperties(propertiesFile);
         }
 
         String executionId = generateExecutionId();
@@ -174,6 +219,10 @@ public class RunBookApiImpl implements RunBookApi {
     @Override
     public String execute(List<List<NodeCredentials>> nodesPerStep, RunBook runbook, RunbookCallback callback, List<DtProperty> properties) {
         String executionId = generateExecutionId();
+        return execute(executionId, nodesPerStep, runbook, callback, properties);
+    }
+
+    private String execute(String executionId, List<List<NodeCredentials>> nodesPerStep, RunBook runbook, RunbookCallback callback, List<DtProperty> properties) {
         setDefaultsForRunBook(runbook);
         TransformedRunBook transformedRunBook = DtRunBookConverter.convert(runbook);
         DtRunbook dtRunbook = convertToDtRunbook(transformedRunBook, properties);
@@ -221,6 +270,10 @@ public class RunBookApiImpl implements RunBookApi {
     @Override
     public String execute(List<List<NodeCredentials>> nodesPerStep, RunBook runbook, RunbookCallback callback, CredentialsProvider credentialsProvider, List<DtProperty> properties) {
         String executionId = generateExecutionId();
+        return execute(executionId, nodesPerStep, runbook, callback, credentialsProvider, properties);
+    }
+
+    private String execute(String executionId, List<List<NodeCredentials>> nodesPerStep, RunBook runbook, RunbookCallback callback, CredentialsProvider credentialsProvider, List<DtProperty> properties) {
         setDefaultsForRunBook(runbook);
         TransformedRunBook transformedRunBook = DtRunBookConverter.convert(runbook);
         DtRunbook dtRunbook = convertToDtRunbook(transformedRunBook, properties);
