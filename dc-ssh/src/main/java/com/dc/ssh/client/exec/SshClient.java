@@ -1,19 +1,3 @@
-/*
- * Copyright (C) 2014 Divine Cloud Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.dc.ssh.client.exec;
 
 import com.dc.ssh.batch.sftp.SftpMode;
@@ -99,7 +83,7 @@ public interface SshClient extends AutoCloseable {
      * @param callback - command execution callback
      *
      * @return the Command Execution Id
-     * @throws SshException - Gets thrown for any SSH related issues.
+     * @throws com.dc.ssh.client.SshException - Gets thrown for any SSH related issues.
      */
     public String execute(SshCommand sshCommand, CommandExecutionCallback callback) throws SshException;
 
@@ -109,7 +93,7 @@ public interface SshClient extends AutoCloseable {
      * @param sshCommand - SSH command to be ran on the given host
      *
      * @return the Command Execution details
-     * @throws SshException - Gets thrown for any SSH related issues.
+     * @throws com.dc.ssh.client.SshException - Gets thrown for any SSH related issues.
      */
     public ExecutionDetails execute(SingleSshCommand sshCommand) throws SshException;
 
@@ -118,7 +102,7 @@ public interface SshClient extends AutoCloseable {
      * @param command - SSH command string to be ran on the given host
      *
      * @return the Command Execution details
-     * @throws SshException - Gets thrown for any SSH related issues.
+     * @throws com.dc.ssh.client.SshException - Gets thrown for any SSH related issues.
      */
     public ExecutionDetails execute(String command) throws SshException;
 
@@ -128,7 +112,7 @@ public interface SshClient extends AutoCloseable {
      * @param timeoutThreshold - Timeout threshold in milliseconds for command execution
      *
      * @return the Command Execution details
-     * @throws SshException - Gets thrown for any SSH related issues.
+     * @throws com.dc.ssh.client.SshException - Gets thrown for any SSH related issues.
      */
     public ExecutionDetails execute(String command, long timeoutThreshold) throws SshException;
 
@@ -138,7 +122,7 @@ public interface SshClient extends AutoCloseable {
      *
      * @param filesList - Files to be transferred.
      *
-     * @throws SshException - Gets thrown for any SSH related issues.
+     * @throws com.dc.ssh.client.SshException - Gets thrown for any SSH related issues.
      */
     public void transferFiles(List<KeyValuePair<String, byte[]>> filesList) throws SshException;
 
@@ -148,7 +132,7 @@ public interface SshClient extends AutoCloseable {
      * @param executionId - execution id for the running command
      * @param answer - answer to be fed
      *
-     * @throws SshException - Gets thrown for any SSH related issues.
+     * @throws com.dc.ssh.client.SshException - Gets thrown for any SSH related issues.
      */
     public void feedAnswer(String executionId, String answer) throws SshException;
 
@@ -158,14 +142,14 @@ public interface SshClient extends AutoCloseable {
      * @param commandExecutionId - ID of the executing command
      *
      * @return true if the command was running and got successfully cancelled. false if not command for given id was running.
-     * @throws SshException - Gets thrown for any SSH related issues while cancelling the command execution.
+     * @throws com.dc.ssh.client.SshException - Gets thrown for any SSH related issues while cancelling the command execution.
      */
     public boolean cancel(String commandExecutionId) throws SshException;
 
     /**
      * Closes the SSH connection to the remote host.
      *
-     * @throws SshException - Gets thrown for any SSH related issues.
+     * @throws com.dc.ssh.client.SshException - Gets thrown for any SSH related issues.
      */
     public void close() throws SshException;
 }
