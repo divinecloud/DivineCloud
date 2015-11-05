@@ -38,6 +38,7 @@ import com.dc.runbook.rt.domain.DtRunbook;
 import com.dc.runbook.rt.domain.TransformedRunBook;
 import com.dc.runbook.rt.exec.*;
 import com.dc.runbook.rt.exec.output.OutputFileStore;
+import com.dc.runbook.rt.exec.output.RunBookOutput;
 import com.dc.ssh.client.exec.SshClient;
 import com.dc.ssh.client.exec.cmd.script.ScriptLanguage;
 import com.dc.ssh.client.exec.vo.Credential;
@@ -115,7 +116,9 @@ public class RunBookApiImpl implements RunBookApi {
 
     @Override
     public void execute(File nodesPerStepFile, File runbookFile, File outputFile, File credentialsProviderFile, File propertiesFile, boolean emitOutput) {
-        OutputFileStore fileStore = new OutputFileStore(outputFile);
+        RunBookOutput runBookOutput = new RunBookOutput();
+
+        OutputFileStore fileStore = new OutputFileStore(outputFile, runBookOutput);
         RunBook runBook = RunBookReader.read(runbookFile);
         List<DtProperty> properties = readProperties(propertiesFile);
         String jsonProperties = null;
@@ -134,6 +137,7 @@ public class RunBookApiImpl implements RunBookApi {
         String executionId = generateExecutionId();
         setDefaultsForRunBook(runBook);
         TransformedRunBook transformedRunBook = DtRunBookConverter.convert(runBook);
+        transformedRunBook.setRunBookPath(runbookFile.getAbsolutePath());
         if(jsonProperties != null) {
             transformedRunBook.setPropertiesJson(jsonProperties);
         }
@@ -166,7 +170,7 @@ public class RunBookApiImpl implements RunBookApi {
         //Map<String, SshClient> sshClientMap = generateSshClientMap(nodesPerStep, executionId);
         ConditionalBarrier<String> barrier = new ConditionalBarrier<>();
         String blockingKey = "RunBookExecCompleteBlock-" + executionId;
-        RunBookApiCallback callback = new RunBookApiCallback(dtRunbook, executionId, fileStore, transformedRunBook, barrier, blockingKey, emitOutput);
+        RunBookApiCallback callback = new RunBookApiCallback(dtRunbook, runBookOutput, executionId, fileStore, transformedRunBook, barrier, blockingKey, emitOutput);
 
         execute(executionId, nodesPerStep, runBook, callback, credentialsProvider, properties);
 

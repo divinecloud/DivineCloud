@@ -28,6 +28,7 @@ import com.dc.runbook.rt.exec.ExecState;
 import com.dc.runbook.rt.exec.RunbookCallback;
 import com.dc.runbook.rt.exec.RunbookStatus;
 import com.dc.runbook.rt.exec.output.OutputStore;
+import com.dc.runbook.rt.exec.output.RunBookOutput;
 import com.dc.runbook.rt.exec.output.StepExecutionStatus;
 import com.dc.util.condition.ConditionalBarrier;
 
@@ -37,6 +38,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RunBookApiCallback implements RunbookCallback {
 
     private DtRunbook runbook;
+    private RunBookOutput runBookOutput;
     private String	          executionId;
     private RunbookStatus execStatus;
     private OutputStore store;
@@ -45,8 +47,9 @@ public class RunBookApiCallback implements RunbookCallback {
     private String blockingKey;
     private boolean emitOutput;
 
-    public RunBookApiCallback(DtRunbook runbook, String executionId, OutputStore store, TransformedRunBook transformedRunbook, ConditionalBarrier<String> barrier, String blockingKey, boolean emitOutput) {
+    public RunBookApiCallback(DtRunbook runbook, RunBookOutput runBookOutput, String executionId, OutputStore store, TransformedRunBook transformedRunbook, ConditionalBarrier<String> barrier, String blockingKey, boolean emitOutput) {
         this.runbook = runbook;
+        this.runBookOutput = runBookOutput;
         this.executionId = executionId;
         this.store = store;
         this.barrier = barrier;
@@ -70,7 +73,12 @@ public class RunBookApiCallback implements RunbookCallback {
 
     @Override
     public StepExecutionStatus executingItem(DtRunbookItem runbookItem) {
-        System.out.println(System.currentTimeMillis() + " - ITEM " + runbookItem.getItemId() + " executing");
+        if(emitOutput) {
+            System.out.println('\n' + "-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-");
+            System.out.println("  Step : " + runbookItem.getId() + "  |  "  + " STARTED");
+            System.out.println("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -" + '\n');
+        }
+
         StepExecutionStatus itemStatus = new StepExecutionStatus(runbookItem.getItemId());
         itemStatus.setStartTime(System.currentTimeMillis());
         execStatus.addItemStatus(runbookItem.getItemId(), itemStatus);
@@ -88,6 +96,10 @@ public class RunBookApiCallback implements RunbookCallback {
         StepExecutionStatus itemStatus = (StepExecutionStatus) execStatus.getItemStatus(runbookItem.getItemId());
         itemStatus.setComplete(true);
         itemStatus.setEndTime(System.currentTimeMillis());
+        System.out.println('\n' + "- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
+        System.out.println("  Step : " + runbookItem.getId() + "  |  " + " COMPLETE");
+        System.out.println("-----------------------------------------------------------------------------------" + '\n');
+
         store.update(execStatus);
         return itemStatus;
     }
@@ -99,7 +111,6 @@ public class RunBookApiCallback implements RunbookCallback {
 
     @Override
     public StepExecutionStatus resumedItem(DtRunbookItem runbookItem) {
-        System.out.println(System.currentTimeMillis() + " - ITEM " + runbookItem.getItemId() + " resumed.");
         StepExecutionStatus itemStatus = (StepExecutionStatus) execStatus.getItemStatus(runbookItem.getItemId());
         itemStatus.setComplete(false);
         itemStatus.setState(ExecState.RESUMED);
@@ -109,7 +120,6 @@ public class RunBookApiCallback implements RunbookCallback {
 
     @Override
     public StepExecutionStatus pausedItem(DtRunbookItem runbookItem) {
-        System.out.println(System.currentTimeMillis() + " - ITEM " + runbookItem.getItemId() + " paused.");
         StepExecutionStatus itemStatus = new StepExecutionStatus(runbookItem.getItemId());
         itemStatus.setStartTime(System.currentTimeMillis());
         itemStatus.setState(ExecState.PAUSED);
@@ -137,7 +147,11 @@ public class RunBookApiCallback implements RunbookCallback {
 
     @Override
     public void started() {
-        System.out.println(System.currentTimeMillis() + " - RUNBOOK started");
+        if(emitOutput) {
+            System.out.println('\n' + "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-");
+            System.out.println("  RunBook : " + runbook.getRunBookPath() + "  |  " + " STARTED");
+            System.out.println("-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-" +'\n');
+        }
         execStatus.setStartTime(System.currentTimeMillis());
         store.create(execStatus);
     }
@@ -149,7 +163,12 @@ public class RunBookApiCallback implements RunbookCallback {
 
     @Override
     public void done() {
-            System.out.println(System.currentTimeMillis() + " - RUNBOOK complete");
+        if(emitOutput) {
+            System.out.println('\n' + "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-");
+            System.out.println("  RunBook : " + runbook.getRunBookPath() + "  |  " + " COMPLETE");
+            System.out.println("-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-" +'\n');
+
+        }
         try {
             execStatus.setEndTime(System.currentTimeMillis());
             execStatus.setComplete(true);
@@ -164,10 +183,17 @@ public class RunBookApiCallback implements RunbookCallback {
 
     @Override
     public void done(Exception e) {
+        if(emitOutput) {
+            System.out.println('\n' + "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-");
+            System.out.println("  RunBook : " + runbook.getRunBookPath() + "  |  " + " State : COMPLETE");
+            System.out.println("  Error Reason :");
+            e.printStackTrace();
+            System.out.println("-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-" +'\n');
+
+        }
         try {
             execStatus.setEndTime(System.currentTimeMillis());
             // TODO: handle exception later.
-            e.printStackTrace();
             execStatus.setComplete(true);
             execStatus.setState(ExecState.FAILED);
             store.update(execStatus);
@@ -221,12 +247,24 @@ public class RunBookApiCallback implements RunbookCallback {
                     latestStepFailed = false;
                 }
             }
-        }
-        StepExecutionStatus itemStatus = (StepExecutionStatus) execStatus.getItemStatus(itemId);
-        itemStatus.addNodeStatus(nodeId, statusCode, message);
-        if(message != null ) {
-            NodeOutputChunk outputChunk = new NodeOutputChunk(nodeId, message, itemId);
-            output(outputChunk);
+
+            if(emitOutput) {
+                System.out.println('\n' + ". - . - . - . - . - . - . - . - . - . - . - . - . - . - . - . - . - . - . - . - . -");
+                System.out.println("  Node : " + nodeId + "  |  " + " " + (latestStepFailed ? "FAILED" : "SUCCESSFUL") + (latestStepFailed ? "  |  REASON : " + message : ""));
+                System.out.println(". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . ." + '\n');
+
+                Map<String, Map<String, String>> runBookOutputMap = runBookOutput.getOutputMap();
+                Map<String, String> stepOutputMap = runBookOutputMap.get(itemId);
+                String nodeOutput = stepOutputMap.get(nodeId);
+                System.out.println(nodeOutput);
+            }
+
+            StepExecutionStatus itemStatus = (StepExecutionStatus) execStatus.getItemStatus(itemId);
+            itemStatus.addNodeStatus(nodeId, statusCode, message);
+            if(message != null ) {
+                NodeOutputChunk outputChunk = new NodeOutputChunk(nodeId, message, itemId);
+                output(outputChunk);
+            }
         }
     }
 }

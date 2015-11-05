@@ -62,7 +62,6 @@ public class SshClientImpl extends AbstractSshClient implements SshClient {
     private volatile boolean rebooting;
     private String temporaryFolder;
     private AtomicInteger counter = new AtomicInteger();
-    private int internalId;
 
 
     public SshClientImpl(NodeCredentials credentials, SshClientConfiguration configuration) throws SshException {
@@ -79,7 +78,6 @@ public class SshClientImpl extends AbstractSshClient implements SshClient {
 
     private void initialize() {
         temporaryFolder = addBackSlashIfNeeded(configuration.getCachedFilesPath()) + "DivineTerminal" + PATH_SEPARATOR + configuration.getUniqueId();
-        internalId = counter.incrementAndGet();
         channelHandlerMap = new ConcurrentHashMap<>();
         sftpClient = new SftpClientImpl(currentSession);
         updateActivityTime();
@@ -92,7 +90,6 @@ public class SshClientImpl extends AbstractSshClient implements SshClient {
         executorCompletionService = new ExecutorCompletionService<>(threadPoolExecutor);
         initializeFutureTaskCleanerThread();
         createDirectory(temporaryFolder);
-        //discoverLinuxOSType();
     }
 
     private String addBackSlashIfNeeded(String targetFolder) {
@@ -122,7 +119,6 @@ public class SshClientImpl extends AbstractSshClient implements SshClient {
 
     @Override
     public String execute(SshCommand sshCommand, CommandExecutionCallback callback) throws SshException {
-        //System.out.println("ID : " + internalId + " Start Time : " + System.currentTimeMillis());
         setRebootIfRequired(sshCommand);
         if(sshCommand == null || callback == null) {
             throw new SshException("Invalid Input arguments while executing command " +  (sshCommand != null ? sshCommand.prettyCode() : "") + " for Host : "
@@ -131,7 +127,6 @@ public class SshClientImpl extends AbstractSshClient implements SshClient {
         reconnectSessionIfNeeded();
 
         executorCompletionService.submit(new ResponseCallable(sshCommand, callback));
-        //System.out.println("ID : " + internalId + " End Time : " + System.currentTimeMillis());
 
         return sshCommand.getExecutionId();
     }
@@ -183,7 +178,7 @@ public class SshClientImpl extends AbstractSshClient implements SshClient {
         if(!currentSession.isConnected()) {
             synchronized(this) {
                 if(rebooting) {
-                    connectSession(18, 10000); //@TODO: Later this values should be from configuration not hard-coded
+                    connectSession(35, 5000); //@TODO: Later this values should be from configuration not hard-coded
                 }
                 if(!currentSession.isConnected()) {
                     //make N attempts before giving up
@@ -219,30 +214,6 @@ public class SshClientImpl extends AbstractSshClient implements SshClient {
 
     }
 
-
-    /*
-    protected LinuxOSType getLinuxOSType() {
-        NodeConfig config = nodeConfigList.get(nodeConfigList.size() - 1);
-        NodeCredentials credentials = config.getNodeCredentials();
-        LinuxOSType result = credentials.getLinuxOSType();
-        if(result == null || result == LinuxOSType.Any) {
-            result = (linuxOSType != null) ? linuxOSType : LinuxOSType.Any;
-        }
-        return result;
-    }
-
-    private void discoverLinuxOSType() {
-        String execId = configuration.getUniqueId() + "_OS";
-        SingleSshCommand command = new SingleSshCommand(execId, "cat /etc/*-release");
-        ExecutionDetails execDetails = runCommand(command, CommandFormatter.formatCommand(command));
-        SshChannelHandler channelHandler = channelHandlerMap.remove(execId);
-        if(channelHandler != null) {
-            channelHandler.disconnect();
-        }
-
-        linuxOSType = OSTypeParser.parse(new String(execDetails.getOutput()));
-    }
-    */
 
     protected void updateActivityTime() {
         lastActivityInMillis = System.currentTimeMillis();
@@ -343,7 +314,7 @@ public class SshClientImpl extends AbstractSshClient implements SshClient {
     }
 
     private void runCommand(SshCommand sshCommand, String commandString, LocalCallback localCallback) {
-        System.out.println("Exec ID: " + sshCommand.getExecutionId() + "  command string : " + commandString);
+        //System.out.println("Exec ID: " + sshCommand.getExecutionId() + "  command string : " + commandString);
         SshChannelHandler channelHandler = new SshChannelHandler(currentSession, configuration, localCallback, commandString, sshCommand.runAsPassword(), sshCommand.answers());
         channelHandlerMap.put(sshCommand.getExecutionId(), channelHandler);
         if(sshCommand.getTimeoutThreshold() > 0) {
@@ -366,7 +337,7 @@ public class SshClientImpl extends AbstractSshClient implements SshClient {
 
         public String call() throws Exception {
             try {
-                System.out.println("ID : " + internalId + " Start for exec id : " + sshCommand.getExecutionId() +  " - " + System.currentTimeMillis() + " " + currentSession);
+                //System.out.println("ID : " + internalId + " Start for exec id : " + sshCommand.getExecutionId() +  " - " + System.currentTimeMillis() + " " + currentSession);
                 executeInSeparateThread(sshCommand, callback);
             }
             catch(SshException e) {

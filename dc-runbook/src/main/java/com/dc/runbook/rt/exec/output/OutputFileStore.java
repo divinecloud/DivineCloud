@@ -41,8 +41,9 @@ public class OutputFileStore implements OutputStore {
     private FileWriter fileWriter;
     private ObjectMapper writeMapper;
 
-    public OutputFileStore(File destinationFile) {
+    public OutputFileStore(File destinationFile, RunBookOutput runBookOutput) {
         this.destinationFile = destinationFile;
+        this.runBookOutput = runBookOutput;
         if(!destinationFile.exists()) {
             File parentFile = destinationFile.getParentFile();
             parentFile.mkdirs();
@@ -59,7 +60,6 @@ public class OutputFileStore implements OutputStore {
         }
 
         writeMapper = new ObjectMapper();
-        runBookOutput = new RunBookOutput();
     }
 
     @Override
