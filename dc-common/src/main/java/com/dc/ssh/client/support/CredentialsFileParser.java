@@ -44,7 +44,7 @@ import java.util.Map;
 
 public class CredentialsFileParser {
 
-    /**
+    /*
      * Parses the credentials text. The text is expected in the following format:
      *
      * NAME:<CREDENTIAL_NAME>, USERNAME:<OS_USER_NAME>, PASSWORD:<PASSWORD>, PRIVATE_KEY:<>PRIVATE_KEY>, PASS_PHRASE:<PASS_PHRASE>, JUMP_HOST:<JUMP_HOST>

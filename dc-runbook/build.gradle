@@ -8,8 +8,6 @@ jar {
 }
 
 dependencies {
-    compile project(':dc-common')
-    compile project(':dc-util')
     compile project(':dc-ssh')
 
     compile 'org.yaml:snakeyaml:1.15'

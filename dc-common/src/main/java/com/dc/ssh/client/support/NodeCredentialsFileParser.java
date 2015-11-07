@@ -48,7 +48,7 @@ import java.util.*;
 
 public class NodeCredentialsFileParser {
 
-    /**
+    /*
      * Parses the node details text. The text is expected in the following format:
      *
      * STEP:<STEP>, ID:<NODE_DISPLAY_ID>, HOST:<HOST_NAME_OR_IP>, PORT:<PORT_NUMBER>, USERNAME:<USER_NAME>, PASSWORD:<PASSWORD>, PRIVATE_KEY:<>PRIVATE_KEY>, PASS_PHRASE:<PASS_PHRASE>, JUMP_HOST:<JUMP_HOST>, AUTH_MODE:M, PASSCODE:<PASSCODE>

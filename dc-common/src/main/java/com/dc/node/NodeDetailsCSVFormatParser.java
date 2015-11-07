@@ -43,7 +43,7 @@ import java.util.List;
 
 public class NodeDetailsCSVFormatParser {
 
-    /**
+    /*
      * Parses the node details text. The text is expected in the following format:
      *
      * [ID:<NODE_DISPLAY_ID>], HOST or IP[:PORT], NAME, CREDENTIALS_NAME, JUMP_HOST, STACK_NAME, [TAG1 TAG2 TAG3 ...], GROUP_PATH, M

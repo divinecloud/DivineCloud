@@ -22,7 +22,7 @@ import com.dc.ssh.client.sftp.SftpClientException;
 
 public interface SftpClientTransferStreamer {
 
-    /**
+    /*
      * Transfers the file content between the local & the remote server.
      *
      * @param fileContent file content bytes
