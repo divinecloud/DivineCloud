@@ -10,3 +10,4 @@ include 'dc-runbook'
 
 include 'dc-java-api'
 
+include 'dc-cli'
