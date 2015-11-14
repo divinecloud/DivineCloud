@@ -46,7 +46,7 @@ import java.util.Map;
 
 public class NodeDetailsParser {
 
-	/**
+	/*
 	 * Parses the node details text. The text is expected in the following format:
 	 *
 	 * [ID:<NODE_DISPLAY_ID>], HOST:<HOST_NAME_OR_IP>, [PORT:<PORT_NUMBER>], NAME:<NODE_NAME>, [CREDENTIALS_NAME:<CREDENTIALS_NAME>], [JUMP_HOST:<JUMP_HOST>], UNIQUE_ID:<UNIQUE_ID>

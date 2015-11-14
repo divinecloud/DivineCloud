@@ -16,25 +16,18 @@
  *
  */
 
-package com.dc.ssh.client.sftp.stream;
+package com.dc.util.pds.executor;
 
-import com.dc.ssh.client.sftp.SftpClientException;
-
-public interface SftpClientTransferStreamer {
-
-    /*
-     * Transfers the file content between the local & the remote server.
-     *
-     * @param fileContent file content bytes
-     * @throws com.dc.ssh.client.sftp.SftpClientException - Gets thrown for any SSH related issues.
-     */
-    public void transfer(byte[] fileContent) throws SftpClientException;
-
+/**
+ * Handler for Partition Messages.
+ */
+public interface PartitionMessageHandler<M> {
+    
     /**
-     * Closes the SFTP connection.
+     * Handles the partition messages received by the Partition Executor Service.
      *
-     * @throws com.dc.ssh.client.sftp.SftpClientException - Gets thrown for any SSH related issues.
+     * @param partitionID - partition id
+     * @param message - message received by the executor service
      */
-    public void close() throws SftpClientException;
-
+    public void handle(String partitionID, M message);
 }
