@@ -18,29 +18,29 @@ dependencies {
 }
 
 task createFolders << {
-    def cliDir = new File("${project.buildDir}/divine-cloud-cli")
+    def cliDir = new File("${project.buildDir}/dist/divine-cloud-cli")
     cliDir.mkdirs()
 
-    def cliBinDir = new File("${project.buildDir}/divine-cloud-cli/bin")
+    def cliBinDir = new File("${project.buildDir}/dist/divine-cloud-cli/bin")
     cliBinDir.mkdirs()
-    def cliLibDir = new File("${project.buildDir}/divine-cloud-cli/lib")
+    def cliLibDir = new File("${project.buildDir}/dist/divine-cloud-cli/lib")
     cliLibDir.mkdirs()
 }
 
 task copyArtifacts << {
     copy {
         from 'src/main/script'
-        into "${project.buildDir}/divine-cloud-cli/bin"
+        into "${project.buildDir}/dist/divine-cloud-cli/bin"
     }
 
     copy {
         from "${project.buildDir}/libs"
-        into "${project.buildDir}/divine-cloud-cli/lib"
+        into "${project.buildDir}/dist/divine-cloud-cli/lib"
     }
 }
 
 task generateZip(type: Zip){
-    from "${project.buildDir}/divine-cloud-cli"
+    from "${project.buildDir}/dist"
     archiveName 'divine-cloud-cli.zip'
 }
 
