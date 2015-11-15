@@ -70,4 +70,8 @@ public interface RunbookStatus {
 
 	public void setOutputMap(Map<String, Map<String, String>> outputMap);
 
+    public String getErrorMessage();
+
+    public void setErrorMessage(String errorMessage);
+
 }

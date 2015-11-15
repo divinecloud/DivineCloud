@@ -46,6 +46,8 @@ public class RunBookApiExecStatus implements RunbookStatus {
     private List<NodeSelectionMap>	           nodesMap;
     private Map<String, Map<String, String>>	outputMap;
 
+    private String errorMessage;
+
     public RunBookApiExecStatus() {
         itemStatusMap = new ConcurrentHashMap<>();
         nodesMap = new ArrayList<>();
@@ -139,5 +141,15 @@ public class RunBookApiExecStatus implements RunbookStatus {
 
     public void setOutputMap(Map<String, Map<String, String>> outputMap) {
         this.outputMap = outputMap;
+    }
+
+    @Override
+    public String getErrorMessage() {
+        return this.errorMessage;
+    }
+
+    @Override
+    public void setErrorMessage(String errorMessage) {
+        this.errorMessage = errorMessage;
     }
 }
