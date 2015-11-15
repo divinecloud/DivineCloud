@@ -16,3 +16,33 @@ jar {
 dependencies {
     compile project(':dc-java-api')
 }
+
+task createFolders << {
+    def cliDir = new File("${project.buildDir}/divine-cloud-cli")
+    cliDir.mkdirs()
+
+    def cliBinDir = new File("${project.buildDir}/divine-cloud-cli/bin")
+    cliBinDir.mkdirs()
+    def cliLibDir = new File("${project.buildDir}/divine-cloud-cli/lib")
+    cliLibDir.mkdirs()
+}
+
+task copyArtifacts << {
+    copy {
+        from 'src/main/script'
+        into "${project.buildDir}/divine-cloud-cli/bin"
+    }
+
+    copy {
+        from "${project.buildDir}/libs"
+        into "${project.buildDir}/divine-cloud-cli/lib"
+    }
+}
+
+task generateZip(type: Zip){
+    from "${project.buildDir}/divine-cloud-cli"
+    archiveName 'divine-cloud-cli.zip'
+}
+
+task setup(dependsOn: [createFolders, copyArtifacts, generateZip]) {
+}

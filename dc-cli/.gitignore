@@ -1,0 +1,21 @@
+# IntelliJ Idea
+.idea/
+out/
+*.ipr
+*.iws
+*.iml
+
+# Eclipse
+.classpath
+.project
+.settings/
+.metadata/
+
+deploy.gradle
+.gradle/
+build/
+dist/
+*.gpg
+
+*.class
+*.log
