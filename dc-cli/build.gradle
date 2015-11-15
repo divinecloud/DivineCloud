@@ -14,5 +14,5 @@ jar {
 }
 
 dependencies {
-    compile project(':dc-common')
+    compile project(':dc-java-api')
 }

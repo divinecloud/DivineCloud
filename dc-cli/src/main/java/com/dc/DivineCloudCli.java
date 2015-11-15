@@ -16,19 +16,46 @@
 
 package com.dc;
 
+
+import com.dc.api.ApiBuilder;
+import com.dc.api.runbook.RunBookApi;
+
+import java.io.File;
+
 public class DivineCloudCli {
 
     public static void main(String [] args) {
         if(args == null || args.length < 2) {
-            System.out.println("Invalid arguments passed.");
-            System.out.println("Usage: ");
-            System.out.println("dc-cli -r runbookFilePath -n nodesPerStepFilePath -p propertiesFilePath -c credentialProviderFilePath -o outputFilePath");
-            System.exit(1);
+            printMessage("Invalid arguments passed");
         }
 
         CliArgs cliArgs = parse(args);
+        validateFile(cliArgs.runbookFile, "RunBook file path is invalid. ");
+        execute(cliArgs);
+    }
 
-        System.out.println(cliArgs);
+    private static void execute(CliArgs cliArgs) {
+        RunBookApi api = ApiBuilder.buildRunBookApi(cliArgs.batchSize);
+        api.execute(new File(cliArgs.nodesPerStepFile), new File(cliArgs.runbookFile), new File(cliArgs.outputFile),
+                new File(cliArgs.credentialsProviderFile), new File(cliArgs.propertiesFile), true);
+    }
+
+    private static void validateFile(String path, String message) {
+        if(path == null) {
+            printMessage(message + " path is NULL");
+        }
+        else {
+            File file = new File(path);
+            if (!file.exists() || file.isDirectory()) {
+                printMessage(message + " path : " + path);
+            }
+        }
+    }
+
+    private static void printMessage(String message) {
+        System.out.println(message);
+        System.out.println("Usage: dc-cli -r <runBook-path> [-b <batch-size>] [-n <nodes-per-step-file-path>] [-p <properties-file-path>] [-c <credential-file-path>] [-o <output-file-path>]");
+        System.exit(1);
     }
 
     private static CliArgs parse(String[] args) {
@@ -52,13 +79,20 @@ public class DivineCloudCli {
                 case "-o" :
                     result.outputFile = args[++currentPointer];
                     break;
+                case "-b" :
+                    try {
+                        result.batchSize = Integer.parseInt(args[++currentPointer]);
+                    }
+                    catch(Exception e) {
+                        printMessage("Invalid batch-size provided");
+                    }
 
                 default:
+                    printMessage("Invalid argument specified : " + type);
             }
             ++currentPointer;
 
         }
-
 
         return result;
     }
@@ -71,6 +105,7 @@ class CliArgs {
     String credentialsProviderFile;
     String propertiesFile;
     boolean emitOutput;
+    int batchSize = 100;
 
 
     @Override
@@ -82,6 +117,7 @@ class CliArgs {
                 ", credentialsProviderFile='" + credentialsProviderFile + '\'' +
                 ", propertiesFile='" + propertiesFile + '\'' +
                 ", emitOutput=" + emitOutput +
+                ", batchSize=" + batchSize +
                 '}';
     }
 }
