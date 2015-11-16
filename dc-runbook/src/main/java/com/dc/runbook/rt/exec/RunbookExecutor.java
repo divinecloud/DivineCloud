@@ -244,8 +244,12 @@ public class RunbookExecutor {
 				}
 				callback.done();
 			} catch (Throwable t) {
-				t.printStackTrace();
-				callback.done(new Exception(t));
+                if(t instanceof DcException) {
+                    callback.done((DcException)t);
+                }
+                else {
+                    callback.done(new Exception(t));
+                }
 			}
 		}
 
