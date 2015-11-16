@@ -16,13 +16,15 @@
 
 package com.dc;
 
-import com.dc.api.ApiBuilder;
 import com.dc.api.NodeCredentialsGenerator;
 import com.dc.api.RunBookApiTestSupport;
 import com.dc.api.TestSupport;
-import com.dc.api.runbook.RunBookApi;
+import com.dc.runbook.rt.exec.ExecState;
+import com.dc.runbook.rt.exec.output.RunBookOutput;
 import com.dc.ssh.client.exec.vo.Credential;
 import com.dc.ssh.client.exec.vo.NodeCredentials;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
 
 import java.io.File;
@@ -31,15 +33,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 public class DivineCloudCliTest {
 
     @Test
     public void testRunBookExecute() {
-        RunBookApi api = ApiBuilder.buildRunBookApi(5);
         NodeCredentials nodeCredentials1 = NodeCredentialsGenerator.generateServer1Credentials();
-
 
         List<NodeCredentials> step1List = new ArrayList<>();
         List<NodeCredentials> step2List = new ArrayList<>();
@@ -100,8 +100,22 @@ public class DivineCloudCliTest {
 
         DivineCloudCli.main(args);
 
+        ObjectMapper reader = new ObjectMapper();
+        JavaType type = reader.getTypeFactory().constructType(RunBookOutput.class);
+        try {
+
+            RunBookOutput output = reader.readValue(new File("/tmp/routput.txt"), type);
+            System.out.println(output.getExecutionId());
+            assertNotNull(output.getExecutionId());
+            assertEquals(ExecState.SUCCESSFUL, output.getStatus());
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+
         RunBookApiTestSupport.deleteFile(testPropsFolder, propertiesFile.getName());
         RunBookApiTestSupport.deleteFile(credDestinationFolder, credFileName);
         RunBookApiTestSupport.deleteFile(nodeCredDestinationFolder, nodeCredFileName);
+        RunBookApiTestSupport.deleteFile("/tmp", "routput.txt");
     }
 }

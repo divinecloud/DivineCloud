@@ -41,6 +41,10 @@ public class StepExecutionStatus implements RunbookItemStatus {
         initialize();
     }
 
+    public StepExecutionStatus() {
+        initialize();
+    }
+
     private void initialize() {
         state = ExecState.SUCCESSFUL;
         nodeStatusMap = new ConcurrentHashMap<>();
