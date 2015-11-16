@@ -90,23 +90,35 @@ public class RunbookCallbackAdapter implements RunbookCallback {
 
     @Override
     public void markCancelled() {
-        notifier.doneNotification(executionId);
-        cleaner.cleanup();
-        callback.markCancelled();
+        try {
+            notifier.doneNotification(executionId);
+            cleaner.cleanup();
+        }
+        finally {
+            callback.markCancelled();
+        }
     }
 
     @Override
     public void done() {
-        notifier.doneNotification(executionId);
-        cleaner.cleanup();
-        callback.done();
+        try {
+            notifier.doneNotification(executionId);
+            cleaner.cleanup();
+        }
+        finally {
+            callback.done();
+        }
     }
 
     @Override
     public void done(Exception e) {
-        notifier.doneNotification(executionId);
-        cleaner.cleanup();
-        callback.done(e);
+        try {
+            notifier.doneNotification(executionId);
+            cleaner.cleanup();
+        }
+        finally {
+            callback.done(e);
+        }
     }
 
     @Override

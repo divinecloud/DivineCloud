@@ -202,8 +202,8 @@ public class RunbookExecutor {
 	class RunBookExecutionHandler extends Thread {
 
 		public void run() {
-			callback.started();
 			try {
+                callback.started();
 				List<DtRunbookStep> steps = context.getRunbook().getSteps();
 				DtRunbookStep previousStep = null;
 				int stepCount = 1;
