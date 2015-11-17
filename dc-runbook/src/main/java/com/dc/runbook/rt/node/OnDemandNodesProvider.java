@@ -19,6 +19,7 @@
 package com.dc.runbook.rt.node;
 
 import com.dc.node.NodeDetails;
+import com.dc.runbook.rt.CredentialsProvider;
 import com.dc.ssh.client.SshClientConfiguration;
 import com.dc.ssh.client.exec.SshClient;
 import com.dc.ssh.client.exec.SshClientImpl;
@@ -30,14 +31,15 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class OnDemandNodesProvider implements OnDemandNodesCleaner {
-
+    private CredentialsProvider credentialsProvider;
     private Map<String, Map<String, NodeDetails>> nodeDetailsMap;
     private Map<String, NodeCredentials> nodeCredentialsMap;
 
     private Map<String, SshClient> nodeClientMap;
     private SshClientConfiguration configuration;
 
-    public OnDemandNodesProvider() {
+    public OnDemandNodesProvider(CredentialsProvider credentialsProvider) {
+        this.credentialsProvider = credentialsProvider;
         nodeDetailsMap = new ConcurrentHashMap<>();
         nodeClientMap = new ConcurrentHashMap<>();
         nodeCredentialsMap = new ConcurrentHashMap<>();
@@ -71,6 +73,24 @@ public class OnDemandNodesProvider implements OnDemandNodesCleaner {
                 nodeCredentialsMap.put(nodeDetails.getUniqueId(), nodeCredentials);
             }
         }
+    }
+
+    public void addTempNode(List<NodeDetails> list) {
+        if(list != null) {
+            for(NodeDetails nodeDetails : list) {
+                List<String> dynamicTags = nodeDetails.getDynamicTags();
+                if(dynamicTags != null && dynamicTags.size() > 0) {
+                    for(String dynamicTag : dynamicTags) {
+                        NodeCredentials nodeCredentials = prepareNodeCredentials(nodeDetails);
+                        addNode(dynamicTag, nodeDetails, nodeCredentials);
+                    }
+                }
+            }
+        }
+    }
+
+    private NodeCredentials prepareNodeCredentials(NodeDetails nodeDetails) {
+        return credentialsProvider.provide(nodeDetails);
     }
 
     public SshClient getClient(String nodeUniqueId) {

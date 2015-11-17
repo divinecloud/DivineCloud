@@ -53,5 +53,14 @@ public class GeneratedPropertiesHandler {
         });
         return result;
     }
+
+    public void addGeneratedRunBookProperties(GeneratedPropertiesHandler stepGeneratedPropertiesHandler) {
+        List<KeyValuePair<String, String>> stepGeneratedProperties = stepGeneratedPropertiesHandler.retrieveGeneratedProperties();
+        if (stepGeneratedProperties != null && stepGeneratedProperties.size() > 0) {
+            for (KeyValuePair<String, String> prop : stepGeneratedProperties) {
+                addProperty(prop.getKey(), prop.getValue());
+            }
+        }
+    }
 }
 
