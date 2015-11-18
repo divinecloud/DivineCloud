@@ -38,6 +38,12 @@ import static org.junit.Assert.*;
 public class DivineCloudCliTest {
 
     @Test
+    public void testPrintMessage() {
+        String [] args = new String[] {"cmd"};
+        DivineCloudCli.main(args);
+    }
+
+    @Test
     public void testRunBookExecute() {
         NodeCredentials nodeCredentials1 = NodeCredentialsGenerator.generateServer1Credentials();
 

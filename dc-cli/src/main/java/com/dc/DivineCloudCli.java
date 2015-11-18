@@ -25,7 +25,7 @@ import java.io.File;
 public class DivineCloudCli {
 
     public static void main(String [] args) {
-        if(args == null || args.length < 2) {
+        if(args == null || args.length < 5) {
             printMessage("Invalid arguments passed");
         }
 
@@ -54,7 +54,12 @@ public class DivineCloudCli {
 
     private static void printMessage(String message) {
         System.out.println(message);
-        System.out.println("Usage: dc-cli -r <runBook-path> [-b <batch-size>] [-n <nodes-per-step-file-path>] [-p <properties-file-path>] [-c <credential-file-path>] [-o <output-file-path>]");
+        System.out.println("");
+        System.out.println("Usage: dc-cli -cmd <command-string> -n <nodes-per-step-file-path> [-b <batch-size>]");
+        System.out.println("        or");
+        System.out.println("Usage: dc-cli -script <script-path> -n <nodes-per-step-file-path> [-a <arguments>] [-sudo y] [-b <batch-size>]");
+        System.out.println("        or");
+        System.out.println("Usage: dc-cli -runbook <runBook-path> -n <nodes-per-step-file-path> [-p <properties-file-path>] [-c <credential-file-path>] [-o <output-file-path>] [-b <batch-size>]");
         System.exit(1);
     }
 

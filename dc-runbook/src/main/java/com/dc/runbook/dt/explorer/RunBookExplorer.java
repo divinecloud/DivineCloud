@@ -26,6 +26,26 @@ import java.util.List;
 
 public class RunBookExplorer {
 
+    public static int count(File baseFolder) throws RunBookException {
+        int result = 0;
+        if(baseFolder == null || !baseFolder.exists()) {
+            throw new RunBookException("Invalid path provided for the RunBook Root folder : " + ((baseFolder != null) ? baseFolder.getAbsolutePath():""));
+        }
+        File[] listOfFiles = baseFolder.listFiles();
+        if(listOfFiles != null) {
+            for (File file : listOfFiles) {
+                if (file.isFile()) {
+                    if (file.getName().endsWith(".runbook")) {
+                        result++;
+                    }
+                } else if (file.isDirectory()) {
+                    result += count(file);
+                }
+            }
+        }
+        return result;
+    }
+
     public static List<String> listRunBooks(File baseFolder) throws RunBookException {
         if(baseFolder == null || !baseFolder.exists()) {
             throw new RunBookException("Invalid path provided for the RunBook Root folder : " + ((baseFolder != null) ? baseFolder.getAbsolutePath():""));
