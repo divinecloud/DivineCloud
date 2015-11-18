@@ -46,6 +46,18 @@ public class RunBookExplorer {
         return result;
     }
 
+    public static int count(List<File> baseFoldersList) throws RunBookException {
+        int result = 0;
+        if(baseFoldersList == null || baseFoldersList.size() == 0) {
+            throw new RunBookException("Empty RunBook Repository Folders provided.");
+        }
+
+        for(File baseFolder : baseFoldersList) {
+            result += count(baseFolder);
+        }
+        return result;
+    }
+
     public static List<String> listRunBooks(File baseFolder) throws RunBookException {
         if(baseFolder == null || !baseFolder.exists()) {
             throw new RunBookException("Invalid path provided for the RunBook Root folder : " + ((baseFolder != null) ? baseFolder.getAbsolutePath():""));

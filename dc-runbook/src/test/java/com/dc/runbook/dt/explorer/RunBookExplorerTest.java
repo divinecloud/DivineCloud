@@ -22,6 +22,8 @@ import com.dc.runbook.TestSupport;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
@@ -41,5 +43,24 @@ public class RunBookExplorerTest {
         System.out.println("Time : " + (endTime - startTime));
         assertEquals(4, count);
         assertEquals(10, count2);
+    }
+
+    @Test
+    public void testRunBookListCount() {
+        String resourceFolderPath = TestSupport.getProperty("resources.path");
+        String runBookFolderPath = resourceFolderPath + "/data/runbooks";
+
+        String sample1RunBooksPath = runBookFolderPath + "/sample1";
+        String sample2RunBooksPath = runBookFolderPath + "/sample2";
+
+        List<File> list = new ArrayList<>();
+        list.add(new File(sample1RunBooksPath));
+        list.add(new File(sample2RunBooksPath));
+        long startTime = System.nanoTime();
+        int count = RunBookExplorer.count(list);
+        long endTime = System.nanoTime();
+        System.out.println("Time : " + (endTime - startTime));
+        assertEquals(14, count);
+
     }
 }
