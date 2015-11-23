@@ -26,16 +26,20 @@ import com.dc.ssh.client.exec.SshClient;
 import com.dc.ssh.client.exec.vo.NodeCredentials;
 import com.dc.util.batch.BatchUnitTask;
 
+import java.util.concurrent.CountDownLatch;
+
 public class CmdExecTask  implements BatchUnitTask {
     private SshClientAccessor sshClientAccessor;
     private NodeCredentials nodeCred;
     private String command;
     private NodeExecutionDetails details;
+    private CountDownLatch doneSignal;
 
-    public CmdExecTask(SshClientAccessor sshClientAccessor, NodeCredentials nodeCred, String command) {
+    public CmdExecTask(SshClientAccessor sshClientAccessor, NodeCredentials nodeCred, String command, CountDownLatch doneSignal) {
         this.sshClientAccessor = sshClientAccessor;
         this.nodeCred = nodeCred;
         this.command = command;
+        this.doneSignal = doneSignal;
     }
 
     public NodeExecutionDetails getResult() {
@@ -47,5 +51,6 @@ public class CmdExecTask  implements BatchUnitTask {
         SshClient sshClient = sshClientAccessor.provide(nodeCred);
         ExecutionDetails execDetails = sshClient.execute(command);
         details = new NodeExecutionDetails(nodeCred, execDetails);
+        doneSignal.countDown();
     }
 }

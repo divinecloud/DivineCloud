@@ -23,6 +23,7 @@ import com.dc.runbook.rt.exec.ExecState;
 import com.dc.runbook.rt.exec.output.RunBookOutput;
 import com.dc.ssh.client.exec.vo.Credential;
 import com.dc.ssh.client.exec.vo.NodeCredentials;
+import com.dc.support.KeyValuePair;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
@@ -41,6 +42,55 @@ public class DivineCloudCliTest {
     public void testPrintMessage() {
         String [] args = new String[] {"cmd"};
         DivineCloudCli.main(args);
+    }
+
+
+    @Test
+    public void testParseNodes() {
+        String cmdString = "dc-cli -cmd \"<command-string>\" -nodes \"node1, node2, node3\" -a \"arg1,\\\"arg2\\\", arg3, arg4\" -user <username> -key <key-file-path>";
+        KeyValuePair<String, String> pair = DivineCloudCli.parseNodes(cmdString);
+
+        KeyValuePair<String, String> pair2 = DivineCloudCli.parseArguments(pair.getValue());
+
+        System.out.println(pair.getKey());
+        System.out.println(pair.getValue());
+        System.out.println(pair2.getKey());
+        System.out.println(pair2.getValue());
+    }
+
+
+    @Test
+    public void testCmdExecutePasswordCredentials() {
+        String host1 = TestSupport.getProperty("server1.host");
+        String userName = TestSupport.getProperty("server1.username");
+        String password = TestSupport.getProperty("server1.password");
+        String host2 = TestSupport.getProperty("transient.server1.host");
+        String pwdFilePath = "/tmp/pwdfile.txt";
+        try {
+            FileWriter writer = new FileWriter(pwdFilePath);
+            writer.write(password);
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+
+        String [] args = new String[]{ "-cmd", "hostname", "-nodes", "\" " + host1 + "," + host2 + "\"", "-user", userName, "-pwd", pwdFilePath};
+
+        DivineCloudCli.main(args);
+
+    }
+
+    @Test
+    public void testCmdExecuteKeyCredentials() {
+        String host = TestSupport.getProperty("server2.host");
+        String userName = TestSupport.getProperty("server2.username");
+        String keyPath = TestSupport.getProperty("server2.key.path");
+        String [] args = new String[]{ "-cmd", "hostname", "-nodes", "\" " + host + "\"", "-user", userName, "-key", keyPath};
+
+        DivineCloudCli.main(args);
+
     }
 
     @Test
@@ -71,7 +121,7 @@ public class DivineCloudCliTest {
 
         String testPropsFolder = TestSupport.getProperty("test.temp.folder") + "/RunBookFileApiTest/props/" + System.nanoTime() + "/";
         File propertiesFile = new File(testPropsFolder, "sample.properties");
-        FileWriter propsFileWriter = null;
+        FileWriter propsFileWriter;
         try {
             File testPropsDir = new File(testPropsFolder);
             testPropsDir.mkdirs();
@@ -102,7 +152,7 @@ public class DivineCloudCliTest {
 
         String nodesFile = nodeCredDestinationFolder + "/" + nodeCredFileName;
         String credsFile = credDestinationFolder + "/" + credFileName;
-        String [] args = new String[]{ "-n", nodesFile, "-r", runBookFile.getAbsolutePath(), "-o", "/tmp/routput.txt", "-c", credsFile, "-p", propertiesFile.getAbsolutePath()};
+        String [] args = new String[]{ "-n", nodesFile, "-runbook", runBookFile.getAbsolutePath(), "-o", "/tmp/routput.txt", "-c", credsFile, "-p", propertiesFile.getAbsolutePath()};
 
         DivineCloudCli.main(args);
 

@@ -4,6 +4,7 @@ server1.password=
 server2.host=
 server2.username=
 server2.key=
+server2.key.path=
 transient.server1.host=
 transient.server1.hostname=
 transient.server1.username=

@@ -47,5 +47,8 @@ public enum NodeCredentialKeys {
     PASS_PHRASE,
     JUMP_HOST,
     MULTI_FACTOR,
-    PASSCODE
+    PASSCODE,
+    RUN_AS,
+    IS_ADMIN,
+    ADMIN_PASSWORD
 }

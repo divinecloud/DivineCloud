@@ -18,9 +18,12 @@
 
 package com.dc.api.cmd;
 
+import com.dc.DcException;
 import com.dc.api.exec.NodeExecutionDetails;
+import com.dc.api.support.ConnectTask;
 import com.dc.api.support.ExecutionIdGenerator;
 import com.dc.api.support.SshClientAccessor;
+import com.dc.runbook.RunBookException;
 import com.dc.runbook.rt.cmd.GroupTermCmdRequestType;
 import com.dc.runbook.rt.cmd.IndividualCmdCancelRequest;
 import com.dc.runbook.rt.cmd.exec.GroupCmdCancelTask;
@@ -35,8 +38,10 @@ import com.dc.util.batch.BatchExecutorService;
 import com.dc.util.batch.BatchUnitTask;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 
 public class CmdApiImpl implements CmdApi {
 
@@ -51,11 +56,14 @@ public class CmdApiImpl implements CmdApi {
     }
 
     public List<NodeExecutionDetails> execute(List<NodeCredentials> nodeCredentials, String command) {
+        String executionId = idGenerator.next();
+        CountDownLatch doneSignal = new CountDownLatch(nodeCredentials.size());
         List<NodeExecutionDetails> result = new ArrayList<>();
         List<BatchUnitTask> taskList = new ArrayList<>();
 
+        generateSshClientMap(nodeCredentials, executionId);
         for(NodeCredentials nodeCred : nodeCredentials) {
-            CmdExecTask task = new CmdExecTask(sshClientAccessor, nodeCred, command);
+            CmdExecTask task = new CmdExecTask(sshClientAccessor, nodeCred, command, doneSignal);
             taskList.add(task);
         }
 
@@ -63,9 +71,47 @@ public class CmdApiImpl implements CmdApi {
 
         try {
             batchExecutorService.execute();
-            result.addAll(taskList.stream().map(task -> ((CmdExecTask) task).getResult()).collect(Collectors.toList()));
         } catch (InterruptedException e) {
             e.printStackTrace();
+        }
+
+        try {
+            doneSignal.await();
+            for(BatchUnitTask task : taskList) {
+                NodeExecutionDetails details = ((CmdExecTask) task).getResult();
+                result.add(details);
+            }
+        } catch (InterruptedException e) {
+            throw new DcException(e.getMessage(), e);
+        }
+
+        return result;
+    }
+
+    private Map<String, SshClient> generateSshClientMap(List<NodeCredentials> nodeCredentials, String executionId) {
+        Map<String, SshClient> result = new HashMap<>();
+
+        List<BatchUnitTask> batchUnitTaskList = new ArrayList<>();
+        for(NodeCredentials cred : nodeCredentials) {
+            ConnectTask connectTask = new ConnectTask(executionId, sshClientAccessor, cred);
+            batchUnitTaskList.add(connectTask);
+        }
+        BatchExecutorService batchExecutorService = new BatchExecutorService(batchSize, batchUnitTaskList);
+        try {
+            batchExecutorService.execute();
+        } catch (InterruptedException e) {
+            e.printStackTrace(); //@TODO: Add appropriate logic to handle interruption
+        }
+
+        for(BatchUnitTask task : batchUnitTaskList) {
+            ConnectTask connectTask = (ConnectTask)task;
+            if(!connectTask.isSuccess()) {
+                throw new RunBookException("Unable to connect to node : " + connectTask.getNodeCred().getHost());
+            }
+        }
+
+        for(NodeCredentials cred : nodeCredentials) {
+            result.put(cred.getId(), sshClientAccessor.get(cred.getId()));
         }
 
         return result;
