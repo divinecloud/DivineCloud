@@ -94,6 +94,31 @@ public class DivineCloudCliTest {
     }
 
     @Test
+    public void testScriptExecutePasswordCredentials() {
+        String host1 = TestSupport.getProperty("server1.host");
+        String userName = TestSupport.getProperty("server1.username");
+        String password = TestSupport.getProperty("server1.password");
+        String host2 = TestSupport.getProperty("transient.server1.host");
+        String pwdFilePath = "/tmp/pwdfile.txt";
+        File scriptFile = new File(TestSupport.getProperty("test.data.path") + "/set1", "sample.sh");
+
+        try {
+            FileWriter writer = new FileWriter(pwdFilePath);
+            writer.write(password);
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+
+        String [] args = new String[]{ "-script", scriptFile.getAbsolutePath(), "-nodes", "\" " + host1 + "," + host2 + "\"", "-user", userName, "-pwd", pwdFilePath};
+
+        DivineCloudCli.main(args);
+
+    }
+
+    @Test
     public void testRunBookExecute() {
         NodeCredentials nodeCredentials1 = NodeCredentialsGenerator.generateServer1Credentials();
 

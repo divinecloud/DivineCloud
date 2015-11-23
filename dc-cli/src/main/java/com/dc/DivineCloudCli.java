@@ -21,6 +21,9 @@ import com.dc.api.ApiBuilder;
 import com.dc.api.cmd.CmdApi;
 import com.dc.api.cmd.CmdApiImpl;
 import com.dc.api.runbook.RunBookApi;
+import com.dc.api.support.ExecutionIdGenerator;
+import com.dc.ssh.client.exec.cmd.script.ScriptCommand;
+import com.dc.ssh.client.exec.cmd.script.ScriptLanguage;
 import com.dc.ssh.client.exec.vo.NodeCredentials;
 import com.dc.support.GroupCmdCliCallback;
 import com.dc.support.KeyValuePair;
@@ -34,6 +37,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DivineCloudCli {
+    private static ExecutionIdGenerator idGenerator = new ExecutionIdGenerator();
 
     public static void main(String [] args) {
         if(args == null || args.length < 5) {
@@ -68,11 +72,6 @@ public class DivineCloudCli {
             nodeCredentialsList = convert(nodes, args.userName, args.keyFilePath, true);
         }
 
-
-//        List<NodeExecutionDetails> details = cmdApi.execute(nodeCredentialsList, args.cmd);
-//        for(NodeExecutionDetails execDetail : details) {
-//            System.out.println(new String(execDetail.getExecutionDetails().getOutput()));
-//        }
         BasicConditionalBarrier barrier = new BasicConditionalBarrier();
 
         GroupCmdCliCallback callback = new GroupCmdCliCallback(barrier);
@@ -91,7 +90,7 @@ public class DivineCloudCli {
                 printMessage("Error occurred while reading the credential file : " + credFilePath + " " + e.getMessage());
             }
             for(String node : nodes) {
-                NodeCredentials credentials = null;
+                NodeCredentials credentials;
                 if(keyBased) {
                     credentials = new NodeCredentials.Builder(node.trim(), userName.trim()).keySupport(true).privateKey(keyBytes).build();
                 }
@@ -105,7 +104,28 @@ public class DivineCloudCli {
     }
 
     private static void executeScript(ScriptCliArgs cliArgs) {
+        CmdApi cmdApi = new CmdApiImpl(cliArgs.batchSize);
+        String[] nodes = cliArgs.nodes;
+        List<NodeCredentials> nodeCredentialsList = null;
+        if(cliArgs.pwdFilePath != null) {
+            nodeCredentialsList = convert(nodes, cliArgs.userName, cliArgs.pwdFilePath, false);
+        }
+        else {
+            nodeCredentialsList = convert(nodes, cliArgs.userName, cliArgs.keyFilePath, true);
+        }
 
+        BasicConditionalBarrier barrier = new BasicConditionalBarrier();
+
+        GroupCmdCliCallback callback = new GroupCmdCliCallback(barrier);
+        byte [] scriptBytes = null;
+        try {
+            scriptBytes = Files.readAllBytes(Paths.get(cliArgs.scriptFilePath.trim()));
+        } catch (IOException e) {
+            printMessage("Error occurred while reading script file content. " + cliArgs.scriptFilePath + " - " + e.getMessage());
+        }
+        ScriptCommand scriptCommand = new ScriptCommand(idGenerator.next(), new String(scriptBytes), ScriptLanguage.Shell, "/bin/sh");
+        cmdApi.execute(nodeCredentialsList, scriptCommand, callback);
+        barrier.block();
     }
 
     private static void executeRunBook(RunBookCliArgs cliArgs) {
@@ -152,7 +172,7 @@ public class DivineCloudCli {
         String arguments = concat(args);
 
         KeyValuePair<String,String> nodesData = null;
-        if(arguments.indexOf("-nodes") > 0) {
+        if(arguments.indexOf(" -nodes ") > 0) {
             nodesData = parseNodes(arguments);
         }
 
@@ -162,10 +182,10 @@ public class DivineCloudCli {
         }
 
 
-        if(cmdString.contains("-runbook")) {
+        if(cmdString.contains("-runbook ")) {
             result = parseRunBook(cmdString.split(" "));
         }
-        else if(cmdString.contains("-script")) {
+        else if(cmdString.contains("-script ")) {
             KeyValuePair<String,String> argData;
             if(nodesData != null) {
                 argData = parseArguments(cmdString);
@@ -174,7 +194,7 @@ public class DivineCloudCli {
                 argData = parseArguments(arguments);
             }
 
-            if(argData != null) {
+            if(argData.getValue() != null) {
                 cmdString = argData.getValue();
             }
             result = parseScript(cmdString.split(" "));
@@ -184,7 +204,7 @@ public class DivineCloudCli {
             }
 
         }
-        else if(cmdString.contains("-cmd")) {
+        else if(cmdString.contains("-cmd ")) {
             result = parseCmd(cmdString.split(" "));
         }
         else {
@@ -355,7 +375,7 @@ public class DivineCloudCli {
     private static boolean isInline(String[] args) {
         boolean result = false;
         for(String arg : args) {
-            if(arg.contains("-nodes")) {
+            if(arg.contains("-nodes ")) {
                 result = true;
                 break;
             }
@@ -366,14 +386,14 @@ public class DivineCloudCli {
 
     public static KeyValuePair<String,String> parseNodes(String args) {
         KeyValuePair<String,String> result = new KeyValuePair<>();
-        if(args.contains("-nodes")) {
-            int startIndex = args.indexOf("-nodes");
-            int nodesStartIndex = startIndex + 6;
+        if(args.contains("-nodes ")) {
+            int startIndex = args.indexOf("-nodes ");
+            int nodesStartIndex = startIndex + 7;
             String subString = args.substring(nodesStartIndex);
             int doubleQuoteStart = subString.indexOf("\"");
             String remainingSubString = subString.substring(doubleQuoteStart + 1);
             int doubleQuoteEnd = remainingSubString.indexOf("\"");
-            result.setKey(subString.substring(doubleQuoteStart + 1, doubleQuoteEnd + 2));
+            result.setKey(subString.substring(doubleQuoteStart + 1, doubleQuoteEnd + 1));
             String prunedString = args.substring(0, startIndex) + subString.substring(doubleQuoteEnd + 3);
             result.setValue(prunedString);
         }
@@ -383,9 +403,9 @@ public class DivineCloudCli {
 
     public static KeyValuePair<String,String> parseArguments(String args) {
         KeyValuePair<String,String> result = new KeyValuePair<>();
-        if(args.contains("-a")) {
-            int startIndex = args.indexOf("-a");
-            int nodesStartIndex = startIndex + 2;
+        if(args.contains(" -a ")) {
+            int startIndex = args.indexOf(" -a ");
+            int nodesStartIndex = startIndex + 4;
             String subString = args.substring(nodesStartIndex);
             int doubleQuoteStart = findDoubleQuoteIndex(subString);
             String remainingSubString = subString.substring(doubleQuoteStart + 1);

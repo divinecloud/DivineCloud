@@ -31,8 +31,12 @@ import com.dc.runbook.rt.cmd.exec.GroupTermCallback;
 import com.dc.runbook.rt.domain.DtRunbookStep;
 import com.dc.runbook.rt.domain.item.DtRunbookCommand;
 import com.dc.runbook.rt.domain.item.DtRunbookItem;
+import com.dc.runbook.rt.domain.item.DtRunbookScript;
 import com.dc.ssh.client.exec.SshClient;
+import com.dc.ssh.client.exec.cmd.SingleSshCommand;
 import com.dc.ssh.client.exec.cmd.SshCommand;
+import com.dc.ssh.client.exec.cmd.script.ScriptCommand;
+import com.dc.ssh.client.exec.cmd.script.ScriptLanguage;
 import com.dc.ssh.client.exec.vo.NodeCredentials;
 import com.dc.util.batch.BatchExecutorService;
 import com.dc.util.batch.BatchUnitTask;
@@ -62,8 +66,10 @@ public class CmdApiImpl implements CmdApi {
         List<BatchUnitTask> taskList = new ArrayList<>();
 
         generateSshClientMap(nodeCredentials, executionId);
+        SingleSshCommand singleSshCommand = new SingleSshCommand(executionId, command);
         for(NodeCredentials nodeCred : nodeCredentials) {
-            CmdExecTask task = new CmdExecTask(sshClientAccessor, nodeCred, command, doneSignal);
+
+            CmdExecTask task = new CmdExecTask(sshClientAccessor, nodeCred, singleSshCommand, doneSignal);
             taskList.add(task);
         }
 
@@ -118,9 +124,39 @@ public class CmdApiImpl implements CmdApi {
     }
 
     public String execute(List<NodeCredentials> nodeCredentials, String command, GroupTermCallback groupTermCallback) {
-        List<BatchUnitTask> requestList = new ArrayList<>();
         String execId = idGenerator.next();
-        GroupTermCallbackWrapper callbackWrapper = new GroupTermCallbackWrapper(groupTermCallback, nodeCredentials.size());
+        SingleSshCommand singleSshCommand = new SingleSshCommand(execId, command);
+        return execute(nodeCredentials, singleSshCommand, groupTermCallback);
+    }
+
+    private DtRunbookStep convertToRunbookStep(SshCommand sshCommand, String execId) {
+        DtRunbookStep step = new DtRunbookStep();
+        DtRunbookItem item = null;
+        if(sshCommand instanceof SingleSshCommand) {
+            SingleSshCommand command = (SingleSshCommand) sshCommand;
+            item = new DtRunbookCommand(1, 1, command.getCommand(), null, false);
+
+        }
+        else {
+            ScriptCommand command = (ScriptCommand) sshCommand;
+            item = new DtRunbookScript(1, 1, command.getCode(), null, null, ScriptLanguage.Shell, "/bin/sh", null, false);
+        }
+
+        step.setItem(item);
+        return step;
+    }
+
+
+    @Override
+    public List<NodeExecutionDetails> execute(List<NodeCredentials> nodeCredentials, SshCommand command) {
+        throw new UnsupportedOperationException("Not Yet Implemented");
+    }
+
+    @Override
+    public String execute(List<NodeCredentials> nodeCredentials, SshCommand command, GroupTermCallback callback) {
+        List<BatchUnitTask> requestList = new ArrayList<>();
+        String execId = command.getExecutionId();
+        GroupTermCallbackWrapper callbackWrapper = new GroupTermCallbackWrapper(callback, nodeCredentials.size());
         for (NodeCredentials nodeCred : nodeCredentials) {
             DtRunbookStep step = convertToRunbookStep(command, execId);
             CmdExecTaskForCallback task = new CmdExecTaskForCallback(execId, step, nodeCred, sshClientAccessor, callbackWrapper);
@@ -134,23 +170,7 @@ public class CmdApiImpl implements CmdApi {
         }
 
         return execId;
-    }
 
-    private DtRunbookStep convertToRunbookStep(String command, String execId) {
-        DtRunbookStep step = new DtRunbookStep();
-        DtRunbookItem item = new DtRunbookCommand(1, 1, command, null, false);
-        step.setItem(item);
-        return step;
-    }
-
-    @Override
-    public List<NodeExecutionDetails> execute(List<NodeCredentials> nodeCredentials, SshCommand command) {
-        throw new UnsupportedOperationException("Not Yet Implemented");
-    }
-
-    @Override
-    public String execute(List<NodeCredentials> nodeCredentials, SshCommand command, GroupTermCallback callback) {
-        return null;
     }
 
     @Override

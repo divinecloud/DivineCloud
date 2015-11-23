@@ -23,6 +23,7 @@ import com.dc.api.exec.NodeExecutionDetails;
 import com.dc.api.support.SshClientAccessor;
 import com.dc.exec.ExecutionDetails;
 import com.dc.ssh.client.exec.SshClient;
+import com.dc.ssh.client.exec.cmd.SshCommand;
 import com.dc.ssh.client.exec.vo.NodeCredentials;
 import com.dc.util.batch.BatchUnitTask;
 
@@ -31,11 +32,11 @@ import java.util.concurrent.CountDownLatch;
 public class CmdExecTask  implements BatchUnitTask {
     private SshClientAccessor sshClientAccessor;
     private NodeCredentials nodeCred;
-    private String command;
+    private SshCommand command;
     private NodeExecutionDetails details;
     private CountDownLatch doneSignal;
 
-    public CmdExecTask(SshClientAccessor sshClientAccessor, NodeCredentials nodeCred, String command, CountDownLatch doneSignal) {
+    public CmdExecTask(SshClientAccessor sshClientAccessor, NodeCredentials nodeCred, SshCommand command, CountDownLatch doneSignal) {
         this.sshClientAccessor = sshClientAccessor;
         this.nodeCred = nodeCred;
         this.command = command;
@@ -49,7 +50,9 @@ public class CmdExecTask  implements BatchUnitTask {
     @Override
     public void execute() throws DcException {
         SshClient sshClient = sshClientAccessor.provide(nodeCred);
-        ExecutionDetails execDetails = sshClient.execute(command);
+        CmdExecCallback callback = new CmdExecCallback();
+        sshClient.execute(command, callback);
+        ExecutionDetails execDetails =  new ExecutionDetails(callback.getStatusCode(), callback.getOutput(), callback.getError());
         details = new NodeExecutionDetails(nodeCred, execDetails);
         doneSignal.countDown();
     }
