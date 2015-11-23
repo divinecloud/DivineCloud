@@ -23,6 +23,7 @@ import com.dc.runbook.rt.exec.ExecState;
 import com.dc.runbook.rt.exec.output.RunBookOutput;
 import com.dc.ssh.client.exec.vo.Credential;
 import com.dc.ssh.client.exec.vo.NodeCredentials;
+import com.dc.support.ExecutionOutput;
 import com.dc.support.KeyValuePair;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -33,6 +34,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -66,6 +68,9 @@ public class DivineCloudCliTest {
         String password = TestSupport.getProperty("server1.password");
         String host2 = TestSupport.getProperty("transient.server1.host");
         String pwdFilePath = "/tmp/pwdfile.txt";
+        String outputFileName = "cmd-output" + System.nanoTime() + ".txt";
+        String outputFilePath = "/tmp/" + outputFileName;
+
         try {
             FileWriter writer = new FileWriter(pwdFilePath);
             writer.write(password);
@@ -76,9 +81,68 @@ public class DivineCloudCliTest {
             fail(e.getMessage());
         }
 
-        String [] args = new String[]{ "-cmd", "hostname", "-nodes", "\" " + host1 + "," + host2 + "\"", "-user", userName, "-pwd", pwdFilePath};
+        String [] args = new String[]{ "-cmd", "hostname", "-nodes", "\" " + host1 + "," + host2 + "\"", "-user", userName, "-pwd", pwdFilePath, "-o", outputFilePath};
 
         DivineCloudCli.main(args);
+        ObjectMapper reader = new ObjectMapper();
+        JavaType type = reader.getTypeFactory().constructType(ExecutionOutput.class);
+        try {
+
+            ExecutionOutput output = reader.readValue(new File(outputFilePath), type);
+
+            assertNotNull(output);
+            assertNotNull(output.getOutputMap());
+            Map<String, Integer> statusCodeMap = output.getStatusCodeMap();
+            assertNotNull(statusCodeMap);
+            assertEquals(new Integer(0), statusCodeMap.get(host1));
+            assertEquals(new Integer(0), statusCodeMap.get(host2));
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+    }
+
+    @Test
+    public void testMultiCmdExecutePasswordCredentials() {
+        String host1 = TestSupport.getProperty("server1.host");
+        String userName = TestSupport.getProperty("server1.username");
+        String password = TestSupport.getProperty("server1.password");
+        String host2 = TestSupport.getProperty("transient.server1.host");
+        String pwdFilePath = "/tmp/pwdfile.txt";
+        String outputFileName = "cmd-output" + System.nanoTime() + ".txt";
+        String outputFilePath = "/tmp/" + outputFileName;
+        try {
+            FileWriter writer = new FileWriter(pwdFilePath);
+            writer.write(password);
+            writer.flush();
+            writer.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+
+        String [] args = new String[]{ "-cmd", "\"hostname; echo Hello\"", "-nodes", "\" " + host1 + "," + host2 + "\"", "-user", userName, "-pwd", pwdFilePath, "-o", outputFilePath};
+
+        DivineCloudCli.main(args);
+
+        ObjectMapper reader = new ObjectMapper();
+        JavaType type = reader.getTypeFactory().constructType(ExecutionOutput.class);
+        try {
+
+            ExecutionOutput output = reader.readValue(new File(outputFilePath), type);
+
+            assertNotNull(output);
+            assertNotNull(output.getOutputMap());
+            Map<String, Integer> statusCodeMap = output.getStatusCodeMap();
+            assertNotNull(statusCodeMap);
+            assertEquals(new Integer(0), statusCodeMap.get(host1));
+            assertEquals(new Integer(0), statusCodeMap.get(host2));
+            assertTrue(output.getOutputMap().get(host1).contains("Hello"));
+            assertTrue(output.getOutputMap().get(host2).contains("Hello"));
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
 
     }
 

@@ -72,9 +72,13 @@ public class DivineCloudCli {
             nodeCredentialsList = convert(nodes, args.userName, args.keyFilePath, true);
         }
 
+        File outputFile = null;
+        if(args.outputFile != null) {
+            outputFile = new File(args.outputFile);
+        }
         BasicConditionalBarrier barrier = new BasicConditionalBarrier();
 
-        GroupCmdCliCallback callback = new GroupCmdCliCallback(barrier);
+        GroupCmdCliCallback callback = new GroupCmdCliCallback(barrier, outputFile);
         cmdApi.execute(nodeCredentialsList, args.cmd, callback);
         barrier.block();
     }
@@ -115,8 +119,11 @@ public class DivineCloudCli {
         }
 
         BasicConditionalBarrier barrier = new BasicConditionalBarrier();
-
-        GroupCmdCliCallback callback = new GroupCmdCliCallback(barrier);
+        File outputFile = null;
+        if(cliArgs.outputFile != null) {
+            outputFile = new File(cliArgs.outputFile);
+        }
+        GroupCmdCliCallback callback = new GroupCmdCliCallback(barrier, outputFile);
         byte [] scriptBytes = null;
         try {
             scriptBytes = Files.readAllBytes(Paths.get(cliArgs.scriptFilePath.trim()));
@@ -153,13 +160,13 @@ public class DivineCloudCli {
     private static void printMessage(String message) {
         System.out.println(message);
         System.out.println("");
-        System.out.println("Usage: dc-cli -cmd \"<command-string>\" -n <nodes-file-path> [-b <batch-size>]");
+        System.out.println("Usage: dc-cli -cmd \"<command-string>\" -n <nodes-file-path> [-o <output-file-path>] [-b <batch-size>]");
         System.out.println("        or");
-        System.out.println("Usage: dc-cli -cmd \"<command-string>\" -nodes \"node1, node2, node3\" -user <username> [-key <key-file-path> | -pwd <pwd-file-path>]");
+        System.out.println("Usage: dc-cli -cmd \"<command-string>\" -nodes \"node1, node2, node3\" -user <username> [-key <key-file-path> | -pwd <pwd-file-path>] [-o <output-file-path>]");
         System.out.println("        or");
-        System.out.println("Usage: dc-cli -script <script-path> -n <nodes-file-path> [-b <batch-size>] [-a <arguments>]");
+        System.out.println("Usage: dc-cli -script <script-path> -n <nodes-file-path> [-b <batch-size>] [-a <arguments>] [-o <output-file-path>]");
         System.out.println("        or");
-        System.out.println("Usage: dc-cli -script <script-path> -user <username> [-key <key-file-path> | -pwd <pwd-file-path>] -nodes \"node1, node2, node3\" [-b <batch-size>] [-a <arguments>]");
+        System.out.println("Usage: dc-cli -script <script-path> -user <username> [-key <key-file-path> | -pwd <pwd-file-path>] -nodes \"node1, node2, node3\" [-b <batch-size>] [-a <arguments>] [-o <output-file-path>]");
         System.out.println("        or");
         System.out.println("Usage: dc-cli -runbook <runBook-path> -n <nodes-per-step-file-path> [-p <properties-file-path>] [-c <credential-file-path>] [-o <output-file-path>] [-b <batch-size>]");
         System.out.println("        or");
@@ -205,7 +212,9 @@ public class DivineCloudCli {
 
         }
         else if(cmdString.contains("-cmd ")) {
-            result = parseCmd(cmdString.split(" "));
+            KeyValuePair<String,String> cmdLinePair = parseCmdLine(cmdString);
+
+            result = parseCmd(cmdLinePair);
         }
         else {
             printMessage("Invalid Arguments provided");
@@ -218,8 +227,37 @@ public class DivineCloudCli {
         return result;
     }
 
-    private static CliArgs parseCmd(String[] args) {
+    private static KeyValuePair<String, String> parseCmdLine(String args) {
+        KeyValuePair<String, String> result = new KeyValuePair<>();
+        if(args.contains("-cmd ")) {
+            int startIndex = args.indexOf("-cmd ");
+            int nodesStartIndex = startIndex + 5;
+            String subString = args.substring(nodesStartIndex);
+            if(subString.trim().startsWith("\"")) {
+                int doubleQuoteStart = findDoubleQuoteIndex(subString);
+                String remainingSubString = subString.substring(doubleQuoteStart + 1);
+                int doubleQuoteEnd = findDoubleQuoteIndex(remainingSubString);
+                result.setKey(subString.substring(doubleQuoteStart + 1, doubleQuoteEnd + 1));
+                String prunedString = args.substring(0, startIndex) + subString.substring(doubleQuoteEnd + 3);
+                result.setValue(prunedString);
+
+            }
+            else {
+                int wordEndIndex = subString.indexOf(" ");
+                result.setKey(subString.substring(0, wordEndIndex));
+                String prunedString = args.substring(0, startIndex) + subString.substring(wordEndIndex + 1);
+                result.setValue(prunedString);
+            }
+        }
+
+        return result;
+    }
+
+    private static CliArgs parseCmd(KeyValuePair<String, String> pair) {
+        String[] args = pair.getValue().split(" ");
+        String cmdLine = pair.getKey();
         CmdCliArgs result = new CmdCliArgs();
+        result.cmd = cmdLine;
         int currentPointer = 0;
         while (currentPointer < args.length) {
             String type = args[currentPointer].trim();
@@ -233,8 +271,11 @@ public class DivineCloudCli {
                 case "-pwd":
                     result.pwdFilePath = args[++currentPointer];
                     break;
-                case "-cmd":
-                    result.cmd = args[++currentPointer];
+                case "-n":
+                    result.nodesFilePath = args[++currentPointer];
+                    break;
+                case "-o":
+                    result.outputFile = args[++currentPointer];
                     break;
                 case "-b":
                     try {
