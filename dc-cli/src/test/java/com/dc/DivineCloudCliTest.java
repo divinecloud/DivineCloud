@@ -24,7 +24,6 @@ import com.dc.runbook.rt.exec.output.RunBookOutput;
 import com.dc.ssh.client.exec.vo.Credential;
 import com.dc.ssh.client.exec.vo.NodeCredentials;
 import com.dc.support.ExecutionOutput;
-import com.dc.support.KeyValuePair;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.Test;
@@ -39,27 +38,6 @@ import java.util.Map;
 import static org.junit.Assert.*;
 
 public class DivineCloudCliTest {
-
-    @Test
-    public void testPrintMessage() {
-        String [] args = new String[] {"cmd"};
-        DivineCloudCli.main(args);
-    }
-
-
-    @Test
-    public void testParseNodes() {
-        String cmdString = "dc-cli -cmd \"<command-string>\" -nodes \"node1, node2, node3\" -a \"arg1,\\\"arg2\\\", arg3, arg4\" -user <username> -key <key-file-path>";
-        KeyValuePair<String, String> pair = DivineCloudCli.parseNodes(cmdString);
-
-        KeyValuePair<String, String> pair2 = DivineCloudCli.parseArguments(pair.getValue());
-
-        System.out.println(pair.getKey());
-        System.out.println(pair.getValue());
-        System.out.println(pair2.getKey());
-        System.out.println(pair2.getValue());
-    }
-
 
     @Test
     public void testCmdExecutePasswordCredentials() {
@@ -151,9 +129,27 @@ public class DivineCloudCliTest {
         String host = TestSupport.getProperty("server2.host");
         String userName = TestSupport.getProperty("server2.username");
         String keyPath = TestSupport.getProperty("server2.key.path");
-        String [] args = new String[]{ "-cmd", "hostname", "-nodes", "\" " + host + "\"", "-user", userName, "-key", keyPath};
-
+        String outputFileName = "cmd-output" + System.nanoTime() + ".txt";
+        String outputFilePath = "/tmp/" + outputFileName;
+        String [] args = new String[]{ "-cmd", "\"hostname; echo Hello\"", "-nodes", "\" " + host + "\"", "-user", userName, "-key", keyPath, "-o", outputFilePath};
         DivineCloudCli.main(args);
+
+        ObjectMapper reader = new ObjectMapper();
+        JavaType type = reader.getTypeFactory().constructType(ExecutionOutput.class);
+        try {
+
+            ExecutionOutput output = reader.readValue(new File(outputFilePath), type);
+
+            assertNotNull(output);
+            assertNotNull(output.getOutputMap());
+            Map<String, Integer> statusCodeMap = output.getStatusCodeMap();
+            assertNotNull(statusCodeMap);
+            assertEquals(new Integer(0), statusCodeMap.get(host));
+            assertTrue(output.getOutputMap().get(host).contains("Hello"));
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
 
     }
 
@@ -175,10 +171,31 @@ public class DivineCloudCliTest {
             e.printStackTrace();
             fail(e.getMessage());
         }
+        String outputFileName = "cmd-output" + System.nanoTime() + ".txt";
+        String outputFilePath = "/tmp/" + outputFileName;
 
-        String [] args = new String[]{ "-script", scriptFile.getAbsolutePath(), "-nodes", "\" " + host1 + "," + host2 + "\"", "-user", userName, "-pwd", pwdFilePath};
+        String [] args = new String[]{ "-script", scriptFile.getAbsolutePath(), "-nodes", "\" " + host1 + "," + host2 + "\"", "-user", userName, "-pwd", pwdFilePath, "-o", outputFilePath};
 
         DivineCloudCli.main(args);
+
+        ObjectMapper reader = new ObjectMapper();
+        JavaType type = reader.getTypeFactory().constructType(ExecutionOutput.class);
+        try {
+
+            ExecutionOutput output = reader.readValue(new File(outputFilePath), type);
+
+            assertNotNull(output);
+            assertNotNull(output.getOutputMap());
+            Map<String, Integer> statusCodeMap = output.getStatusCodeMap();
+            assertNotNull(statusCodeMap);
+            assertEquals(new Integer(0), statusCodeMap.get(host1));
+            assertEquals(new Integer(0), statusCodeMap.get(host2));
+            assertTrue(output.getOutputMap().get(host1).contains("Sample Shell Script"));
+            assertTrue(output.getOutputMap().get(host2).contains("Sample Shell Script"));
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
 
     }
 
