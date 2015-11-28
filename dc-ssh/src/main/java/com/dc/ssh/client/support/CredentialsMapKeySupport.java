@@ -25,6 +25,10 @@ public class CredentialsMapKeySupport {
         return "" + accountId + divisionId + userId + "_" + credentialId;
     }
 
+    public static String generateUserCredentialId(int accountId, int divisionId, int userId, String credentialString) {
+        return "" + accountId + divisionId + userId + "_" + credentialString;
+    }
+
     public static String generatePassphraseCredentialId(String userCredentialId) {
         return userCredentialId + "-PASSPHRASE";
     }

@@ -20,6 +20,7 @@ package com.dc.ssh.client.support;
 
 
 public class SshCredentialInfo {
+    private String displayId;
 	private String	             userCredentialId;
 	private SessionBasedAuthData	authData;
 	private String	             passcode;
@@ -48,4 +49,11 @@ public class SshCredentialInfo {
 		this.passcode = passcode;
 	}
 
+    public String getDisplayId() {
+        return displayId;
+    }
+
+    public void setDisplayId(String displayId) {
+        this.displayId = displayId;
+    }
 }

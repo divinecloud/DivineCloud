@@ -19,6 +19,7 @@
 package com.dc.ssh.client.support;
 
 public class SessionBasedAuthData {
+    private String osUsername;
 	private String	password;
 	private String	privateKey;
 	private String	passphrase;
@@ -66,4 +67,11 @@ public class SessionBasedAuthData {
 		this.credPresent = credPresent;
 	}
 
+    public String getOsUsername() {
+        return osUsername;
+    }
+
+    public void setOsUsername(String osUsername) {
+        this.osUsername = osUsername;
+    }
 }
