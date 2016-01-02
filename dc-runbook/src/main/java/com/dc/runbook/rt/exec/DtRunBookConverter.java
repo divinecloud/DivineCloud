@@ -48,6 +48,8 @@ public class DtRunBookConverter {
 		transformedRunBook.setReleaseVersion(runBook.getReleaseVersion());
 		transformedRunBook.setRunBooksMap(runBookMap);
 		transformedRunBook.setSteps(steps);
+        transformedRunBook.setSuccessMessage(runBook.getSuccessfulCompletionMessage());
+        transformedRunBook.setFailedMessage(runBook.getFailedCompletionMessage());
 		applyProperties(transformedRunBook, runBook);
 		int runBookId = 0;
 		AtomicInteger sequenceId = new AtomicInteger();

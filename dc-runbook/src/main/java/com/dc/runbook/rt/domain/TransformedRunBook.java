@@ -41,7 +41,10 @@ public class TransformedRunBook {
 	private String	              releaseVersion;
 
 	private String	              propertiesJson;
-	
+
+    private String	              successMessage;
+    private String	              failedMessage;
+
 	private List<NodeDetails> transientNodes;
 	
 	public List<DtRunbookStep> getSteps() {
@@ -143,4 +146,19 @@ public class TransformedRunBook {
 		this.runBookPath = runBookPath;
 	}
 
+    public String getSuccessMessage() {
+        return successMessage;
+    }
+
+    public void setSuccessMessage(String successMessage) {
+        this.successMessage = successMessage;
+    }
+
+    public String getFailedMessage() {
+        return failedMessage;
+    }
+
+    public void setFailedMessage(String failedMessage) {
+        this.failedMessage = failedMessage;
+    }
 }

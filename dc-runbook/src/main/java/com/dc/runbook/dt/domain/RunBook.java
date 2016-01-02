@@ -44,6 +44,7 @@ public class RunBook {
 	private String	          generatedPropertiesFilePath;
 
 	private String successfulCompletionMessage;
+    private String failedCompletionMessage;
 
 	private String	          releaseName;
 	private String	          releaseVersion;
@@ -244,4 +245,11 @@ public class RunBook {
 		this.releaseVersion = releaseVersion;
 	}
 
+    public String getFailedCompletionMessage() {
+        return failedCompletionMessage;
+    }
+
+    public void setFailedCompletionMessage(String failedCompletionMessage) {
+        this.failedCompletionMessage = failedCompletionMessage;
+    }
 }
