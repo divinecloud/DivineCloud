@@ -91,13 +91,13 @@ public class SampleRunBookCallBack implements RunbookCallback {
     }
 
     @Override
-    public void done() {
+    public void done(String message) {
         System.out.println("Done");
         barrier.release(blockingId);
     }
 
     @Override
-    public void done(Exception e) {
+    public void done(String message, Exception e) {
         System.out.println("Done");
         e.printStackTrace();
         barrier.release(blockingId);

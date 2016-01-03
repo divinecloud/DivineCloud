@@ -43,9 +43,9 @@ public interface RunbookCallback {
 
 	public void markCancelled();
 	
-	public void done();
+	public void done(String message);
 	
-	public void done(Exception e);
+	public void done(String message, Exception e);
 	
 	public String getExecutionId();
 	

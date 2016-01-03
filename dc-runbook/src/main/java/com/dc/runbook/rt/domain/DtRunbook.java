@@ -33,8 +33,10 @@ public class DtRunbook {
     private String propertiesJson;
     private String runBookPath;
     private List<NodeDetails> transientNodes;
+    private String successMessage;
+    private String failedMessage;
     
-    public DtRunbook(String userId, String spaceId, String id, List<DtRunbookStep> steps, List<DtProperty> properties, boolean utilityMode, String	generatedPropertiesFilePath, String propertiesJson, String runBookPath, List<NodeDetails> transientNodes) {
+    public DtRunbook(String userId, String spaceId, String id, List<DtRunbookStep> steps, List<DtProperty> properties, boolean utilityMode, String	generatedPropertiesFilePath, String propertiesJson, String runBookPath, List<NodeDetails> transientNodes, String successMessage, String failedMessage) {
         this.userId = userId;
         this.spaceId = spaceId;
         this.id = id;
@@ -45,6 +47,8 @@ public class DtRunbook {
         this.propertiesJson = propertiesJson;
         this.runBookPath = runBookPath;
         this.transientNodes = transientNodes;
+        this.successMessage = successMessage;
+        this.failedMessage = failedMessage;
     }
 
     public String getUserId() {
@@ -85,5 +89,13 @@ public class DtRunbook {
 
     public List<NodeDetails> getTransientNodes() {
         return transientNodes;
+    }
+
+    public String getSuccessMessage() {
+        return successMessage;
+    }
+
+    public String getFailedMessage() {
+        return failedMessage;
     }
 }

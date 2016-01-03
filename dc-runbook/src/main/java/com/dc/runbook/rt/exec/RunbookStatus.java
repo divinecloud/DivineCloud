@@ -74,4 +74,8 @@ public interface RunbookStatus {
 
     public void setErrorMessage(String errorMessage);
 
+    public String getFinerStatus();
+
+    public void setFinerStatus(String finerStatus);
+
 }

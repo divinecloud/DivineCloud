@@ -45,6 +45,7 @@ public class RunBookApiExecStatus implements RunbookStatus {
     private TransformedRunBook	               transformedRunbook;
     private List<NodeSelectionMap>	           nodesMap;
     private Map<String, Map<String, String>>	outputMap;
+    private String finerStatus;
 
     private String errorMessage;
 
@@ -151,5 +152,15 @@ public class RunBookApiExecStatus implements RunbookStatus {
     @Override
     public void setErrorMessage(String errorMessage) {
         this.errorMessage = errorMessage;
+    }
+
+    @Override
+    public String getFinerStatus() {
+        return finerStatus;
+    }
+
+    @Override
+    public void setFinerStatus(String finerStatus) {
+        this.finerStatus = finerStatus;
     }
 }

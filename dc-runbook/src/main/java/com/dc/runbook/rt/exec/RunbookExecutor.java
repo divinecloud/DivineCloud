@@ -164,13 +164,13 @@ public class RunbookExecutor {
 					}
 					stepCount++;
 				}
-				callback.done();
+				callback.done(context.getRunbook().getSuccessMessage());
 			} catch (Throwable t) {
                 if(t instanceof DcException) {
-                    callback.done((DcException)t);
+                    callback.done(context.getRunbook().getFailedMessage(), (DcException)t);
                 }
                 else {
-                    callback.done(new Exception(t.getMessage(), t));
+                    callback.done(context.getRunbook().getFailedMessage(), new Exception(t.getMessage(), t));
                 }
 			}
 		}

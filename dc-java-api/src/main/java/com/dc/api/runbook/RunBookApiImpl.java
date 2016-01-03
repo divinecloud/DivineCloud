@@ -320,7 +320,7 @@ public class RunBookApiImpl implements RunBookApi {
     private DtRunbook convertToDtRunbook(TransformedRunBook transformedRunBook, List<DtProperty> properties) {
 
         return new DtRunbook("NotApplicable", "NotApplicable", UUID.randomUUID().toString(), transformedRunBook.getSteps(),  properties, transformedRunBook.isUtilityMode(),
-                transformedRunBook.getGeneratedPropertiesFilePath(), transformedRunBook.getPropertiesJson(), transformedRunBook.getRunBookPath(), transformedRunBook.getTransientNodes());
+                transformedRunBook.getGeneratedPropertiesFilePath(), transformedRunBook.getPropertiesJson(), transformedRunBook.getRunBookPath(), transformedRunBook.getTransientNodes(), transformedRunBook.getSuccessMessage(), transformedRunBook.getFailedMessage());
     }
 
     private Map<String, SshClient> generateSshClientMap(List<List<NodeCredentials>> nodesPerStep, String executionId) throws RunBookException {

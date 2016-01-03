@@ -162,7 +162,7 @@ public class RunBookApiCallback implements RunbookCallback {
     }
 
     @Override
-    public void done() {
+    public void done(String message) {
         if(emitOutput) {
             System.out.println('\n' + "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-");
             System.out.println("  RunBook : " + runbook.getRunBookPath() + "  |  " + " COMPLETE");
@@ -173,6 +173,7 @@ public class RunBookApiCallback implements RunbookCallback {
             execStatus.setEndTime(System.currentTimeMillis());
             execStatus.setComplete(true);
             execStatus.setState(didLatestStepFail() ? ExecState.FAILED : ExecState.SUCCESSFUL);
+            execStatus.setFinerStatus(message);
             store.update(execStatus);
             store.done();
         }
@@ -182,7 +183,7 @@ public class RunBookApiCallback implements RunbookCallback {
     }
 
     @Override
-    public void done(Exception e) {
+    public void done(String message, Exception e) {
         if(emitOutput) {
             System.out.println('\n' + "-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-");
             System.out.println("  RunBook : " + runbook.getRunBookPath() + "  |  " + " State : COMPLETE");
@@ -195,6 +196,7 @@ public class RunBookApiCallback implements RunbookCallback {
             execStatus.setEndTime(System.currentTimeMillis());
             // TODO: handle exception later.
             execStatus.setComplete(true);
+            execStatus.setFinerStatus(message);
             execStatus.setState(ExecState.FAILED);
             store.update(execStatus);
             store.done();
