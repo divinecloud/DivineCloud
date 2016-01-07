@@ -19,6 +19,10 @@
 package com.dc.runbook.dt.explorer;
 
 import com.dc.runbook.RunBookException;
+import com.dc.runbook.dt.domain.Location;
+import com.dc.runbook.dt.domain.RunBook;
+import com.dc.runbook.dt.domain.RunbookInfo;
+import com.dc.runbook.dt.locator.RunBookLocator;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -81,5 +85,16 @@ public class RunBookExplorer {
                 }
             }
         }
+    }
+
+    public static RunbookInfo fetchRunbookInfo(String fullPath) throws RunBookException {
+        if(fullPath == null) {
+            throw new RunBookException("Invalid path provided for the RunBook : " + fullPath);
+        }
+        RunbookInfo runbookInfo = new RunbookInfo();
+        RunBook runbook = RunBookLocator.locate(fullPath, Location.Local);
+        runbookInfo.setName(runbook.getName());
+        runbookInfo.setFullPath(fullPath);
+        return runbookInfo;
     }
 }
