@@ -91,28 +91,25 @@ public class NodeDetailsCSVFormatParser {
                         if (fields.length > currentIndex + 1) {
                             currentIndex++;
                             if (!"".equals(fields[currentIndex].trim())) {
-                                nodeDetails.setJumpHost(fields[currentIndex].trim());
+                                setTags(nodeDetails, fields[currentIndex]);
+                                //nodeDetails.setJumpHost(fields[currentIndex].trim());
                             }
-//                            if (fields.length > currentIndex + 1) {
-//                                currentIndex++;
-//                                if (!"".equals(fields[currentIndex].trim())) {
-//                                    nodeDetails.setStack(fields[currentIndex].trim());
-//                                }
+                            if (fields.length > currentIndex + 1) {
+                                currentIndex++;
+                                setGroupPath(nodeDetails, fields[currentIndex]);
                                 if (fields.length > currentIndex + 1) {
                                     currentIndex++;
-                                    setTags(nodeDetails, fields[currentIndex]);
+                                    if (!"".equals(fields[currentIndex].trim())) {
+                                        nodeDetails.setJumpHost(fields[currentIndex].trim());
+                                    }
                                     if (fields.length > currentIndex + 1) {
                                         currentIndex++;
-                                        setGroupPath(nodeDetails, fields[currentIndex]);
-                                        if (fields.length > currentIndex + 1) {
-                                            currentIndex++;
-                                            if (fields[currentIndex] != null && "M".equalsIgnoreCase(fields[currentIndex].trim())) {
-                                                nodeDetails.setMultiFactorAuthenticate(true);
-                                            }
+                                        if (fields[currentIndex] != null && "M".equalsIgnoreCase(fields[currentIndex].trim())) {
+                                            nodeDetails.setMultiFactorAuthenticate(true);
                                         }
                                     }
                                 }
-//                            }
+                            }
                         }
                     }
                     nodesList.add(nodeDetails);
@@ -168,7 +165,8 @@ public class NodeDetailsCSVFormatParser {
     }
 
     public static void main(String[] args) {
-        NodeDetailsParser parser = new NodeDetailsParser();
-        parser.parse("HOST1:80, SAMPLE Host \n" + "HOST, SAMPLE Host 2, , HOST1\n" + "Host3.a.com:22\n" + "192.168.1.1, host 3, cred_1, host1\n" + "   \n " + "\n192.1.1.1:235, host.5.sample, cred_1, host2, T1 T2 T_3");
+        NodeDetailsCSVFormatParser parser = new NodeDetailsCSVFormatParser();
+        parser.parse("192.1.1.1:235, host.5.sample, cred_1, T1 T2 T_3, host2");
+        //parser.parse("HOST1:80, SAMPLE Host \n" + "HOST, SAMPLE Host 2, , HOST1\n" + "Host3.a.com:22\n" + "192.168.1.1, host 3, cred_1, host1\n" + "   \n " + "\n192.1.1.1:235, host.5.sample, cred_1, host2, T1 T2 T_3");
     }
 }
