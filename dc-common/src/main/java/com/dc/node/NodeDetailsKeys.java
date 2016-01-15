@@ -43,7 +43,6 @@ public enum NodeDetailsKeys {
     NAME,
     JUMP_HOST,
     CREDENTIALS_NAME,
-    STACK,
     TAGS,
     MULTI_FACTOR,
     GROUP_PATH,
