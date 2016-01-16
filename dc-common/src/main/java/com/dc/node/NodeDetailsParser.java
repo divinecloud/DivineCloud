@@ -137,9 +137,6 @@ public class NodeDetailsParser {
         if(columnsMap.get(NodeDetailsKeys.CREDENTIALS_NAME.name()) != null) {
             result.setCredentialName(columnsMap.get(NodeDetailsKeys.CREDENTIALS_NAME.name()));
         }
-        if(columnsMap.get(NodeDetailsKeys.STACK.name()) != null) {
-            result.setStack(columnsMap.get(NodeDetailsKeys.STACK.name()));
-        }
         if(columnsMap.get(NodeDetailsKeys.TAGS.name()) != null) {
             result.setTagNames(parseTags(columnsMap.get(NodeDetailsKeys.TAGS.name())));
         }
