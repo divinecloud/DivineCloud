@@ -30,6 +30,7 @@ import com.dc.runbook.rt.exec.support.RunBookWorker;
 import com.dc.runbook.rt.node.OnDemandNodesProvider;
 import com.dc.support.KeyValuePair;
 import com.dc.util.condition.ConditionalBarrier;
+import com.dc.util.string.EnhancedStringBuilder;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -164,16 +165,34 @@ public class RunbookExecutor {
 					}
 					stepCount++;
 				}
-				callback.done(context.getRunbook().getSuccessMessage());
-			} catch (Throwable t) {
-                if(t instanceof DcException) {
-                    callback.done(context.getRunbook().getFailedMessage(), (DcException)t);
+                String message;
+                if(callback.didLatestStepFail()) {
+                    message = replaceTokens(context.getRunbook().getFailedMessage());
                 }
                 else {
-                    callback.done(context.getRunbook().getFailedMessage(), new Exception(t.getMessage(), t));
+                    message = replaceTokens(context.getRunbook().getSuccessMessage());
+                }
+				callback.done(message);
+			} catch (Throwable t) {
+                if(t instanceof DcException) {
+                    callback.done(t.getMessage(), (DcException)t);
+                }
+                else {
+                    callback.done(t.getMessage(), new Exception(t.getMessage(), t));
                 }
 			}
 		}
+
+        private String replaceTokens(String text) {
+            EnhancedStringBuilder builder = new EnhancedStringBuilder(new StringBuilder(text));
+            List<KeyValuePair<String, String>> props = runbookGeneratedPropertiesHandler.retrieveGeneratedProperties();
+            if(props != null) {
+                for (KeyValuePair<String, String> pair : props) {
+                    builder.replaceAll(pair.getKey(), pair.getValue());
+                }
+            }
+            return builder.toString();
+        }
 
         private void addTransientNodesIfPresent() {
             List<NodeDetails> transientNodes = context.getRunbook().getTransientNodes();
