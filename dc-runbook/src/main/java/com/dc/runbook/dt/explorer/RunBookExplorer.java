@@ -77,10 +77,10 @@ public class RunBookExplorer {
         if(listOfFiles != null) {
             for (File file : listOfFiles) {
                 if (file.isFile()) {
-//                    if (file.getName().endsWith(".runbook")) {
+                    if (!file.getName().startsWith(".")) {
                         result.add(file.getAbsolutePath());
-//                    }
-                } else if (file.isDirectory()) {
+                    }
+                } else if (file.isDirectory() && !file.getName().startsWith(".")) {
                     listFiles(file, result); //@TODO: Later add logic to capture Permission Denied exceptions and move on
                 }
             }

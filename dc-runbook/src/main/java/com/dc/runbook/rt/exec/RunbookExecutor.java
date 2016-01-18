@@ -184,14 +184,18 @@ public class RunbookExecutor {
 		}
 
         private String replaceTokens(String text) {
-            EnhancedStringBuilder builder = new EnhancedStringBuilder(new StringBuilder(text));
-            List<KeyValuePair<String, String>> props = runbookGeneratedPropertiesHandler.retrieveGeneratedProperties();
-            if(props != null) {
-                for (KeyValuePair<String, String> pair : props) {
-                    builder.replaceAll(pair.getKey(), pair.getValue());
+            String result = text;
+            if(text != null && text.trim().length() > 0) {
+                EnhancedStringBuilder builder = new EnhancedStringBuilder(new StringBuilder(text));
+                List<KeyValuePair<String, String>> props = runbookGeneratedPropertiesHandler.retrieveGeneratedProperties();
+                if (props != null) {
+                    for (KeyValuePair<String, String> pair : props) {
+                        builder.replaceAll(pair.getKey(), pair.getValue());
+                    }
                 }
+                result = builder.toString();
             }
-            return builder.toString();
+            return result;
         }
 
         private void addTransientNodesIfPresent() {
