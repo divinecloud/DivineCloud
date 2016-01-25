@@ -29,6 +29,7 @@ public class SshErrorTokens {
     public static final String UNKNOWN_HOST = "UNKNOWN_HOST";
     public static final String CONNECTION_REFUSED = "CONNECTION_REFUSED";
     public static final String INVALID_CREDENTIALS = "INVALID_CREDENTIALS";
+    public static final String CREDENTIALS_NOT_PROVIDED = "CREDENTIALS_NOT_PROVIDED";
     public static final String INVALID_PORT = "INVALID_PORT";
     public static final String CHANNEL_CANNOT_OPEN = "CHANNEL_CANNOT_OPEN";
     public static final String SLEEP_INTERRUPTED = "SLEEP_INTERRUPTED";
