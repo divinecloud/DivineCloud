@@ -9,12 +9,11 @@ Product Options
 
     DivineCloud Open Source Edition (Includes CLI & SDK)
     DivineCloud Community Edition (Includes DivineCloud Open Source + Advanced Web Console)
-    DivineCloud Standard & Enterprise Editions (Paid Editions)
 
 
 For more information, visit <http://www.divinecloud.com>
 
-**Installation:** Available online at <http://www.divinecloud.com/docs/doc-install.html>
+**Installation:** <http://www.divinecloud.com/docs/doc-install.html>
 
 **Documentation:** <http://www.divinecloud.com/docs/doc-intro.html>
 
