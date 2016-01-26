@@ -18,3 +18,5 @@ For more information, visit <http://www.divinecloud.com>
 **Documentation:** <http://www.divinecloud.com/docs/doc-intro.html>
 
 **License:** [Apache 2.0](http://www.apache.org/licenses/LICENSE-2.0)
+
+DivineCloud Open Source is sponsored by [Divine Cloud Inc.](http://www.divinecloud.com)
