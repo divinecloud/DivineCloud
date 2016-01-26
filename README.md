@@ -1,7 +1,7 @@
 Divine Cloud
 =====
 
-    Divine Cloud is an open source automation tool for simplifying  daily chores of operations management 
+    Divine Cloud is an open source automation tool for simplifying daily chores of operations management 
     including, Application Deployments & Hyrbid Cloud Management.
 
 Product Options
