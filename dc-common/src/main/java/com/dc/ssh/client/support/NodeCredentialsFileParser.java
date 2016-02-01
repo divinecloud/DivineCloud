@@ -135,14 +135,20 @@ public class NodeCredentialsFileParser {
 
     private static KeyValuePair<Integer,NodeCredentials> convert(Map<String, String> columnsMap, boolean forRunBook) {
         KeyValuePair<Integer, NodeCredentials> pair = new KeyValuePair<>();
-        int stepNumber = Integer.parseInt(columnsMap.get(NodeCredentialKeys.STEP.name()));
+        String stepNumberStr = columnsMap.get(NodeCredentialKeys.STEP.name());
+        int stepNumber;
         String host = columnsMap.get(NodeCredentialKeys.HOST.name());
         String username = columnsMap.get(NodeCredentialKeys.USERNAME.name());
-        if(forRunBook && (host == null || username == null || stepNumber < 1)) {
+
+        if(forRunBook && (host == null || username == null || stepNumberStr == null || stepNumberStr.trim().length() == 0)) {
             throw new DcException("Invalid Node Credentials record provided in the file : " + host + " " + username);
         }
-        else {
+
+        if(!forRunBook) {
             stepNumber = 1;
+        }
+        else {
+            stepNumber = Integer.parseInt(stepNumberStr);
         }
         NodeCredentials.Builder resultBuilder = new NodeCredentials.Builder(host, username);
 

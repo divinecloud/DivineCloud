@@ -256,7 +256,7 @@ public class DivineCloudCli {
         if(result.pwdFilePath != null) {
             validateFile(result.pwdFilePath, "Password file path is invalid. ");
         }
-        else {
+        else if(result.keyFilePath != null) {
             validateFile(result.keyFilePath, "Private Key file path is invalid. ");
         }
 
