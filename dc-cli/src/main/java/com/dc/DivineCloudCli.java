@@ -41,9 +41,6 @@ public class DivineCloudCli {
     private static ExecutionIdGenerator idGenerator = new ExecutionIdGenerator();
 
     public static void main(String [] args) {
-        if(args == null || args.length < 5) {
-            printMessage("Invalid arguments passed");
-        }
         execute(args);
     }
 
@@ -182,6 +179,10 @@ public class DivineCloudCli {
 
         Map<String, String> argsMap = convertToMap(args);
 
+        if(argsMap.containsKey("-help")) {
+            printMessage("DivineCloud CLI");
+            System.exit(0);
+        }
 
         if(argsMap.containsKey("-runbook")) {
             result = parseRunBook(argsMap);
@@ -205,7 +206,10 @@ public class DivineCloudCli {
         int currentIndex = 0;
         while(currentIndex < size) {
             String key = args[currentIndex++];
-            String value = args[currentIndex++];
+            String value = null;
+            if(currentIndex < size) {
+                value = args[currentIndex++];
+            }
             result.put(key, value);
         }
         return result;
