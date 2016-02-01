@@ -44,11 +44,33 @@ public class DivineCloudCliTest {
         String host1 = TestSupport.getProperty("server1.host");
         String userName = TestSupport.getProperty("server1.username");
         String password = TestSupport.getProperty("server1.password");
-        String host2 = TestSupport.getProperty("transient.server1.host");
         String pwdFilePath = "/tmp/pwdfile.txt";
         String outputFileName = "cmd-output" + System.nanoTime() + ".txt";
         String outputFilePath = "/tmp/" + outputFileName;
 
+        writeToFile(password, pwdFilePath);
+
+        String [] args = new String[]{ "-cmd", "hostname", "-nodes", "\" " + host1 + "\"", "-user", userName, "-pwd", pwdFilePath, "-o", outputFilePath};
+
+        DivineCloudCli.main(args);
+        ObjectMapper reader = new ObjectMapper();
+        JavaType type = reader.getTypeFactory().constructType(ExecutionOutput.class);
+        try {
+
+            ExecutionOutput output = reader.readValue(new File(outputFilePath), type);
+
+            assertNotNull(output);
+            assertNotNull(output.getOutputMap());
+            Map<String, Integer> statusCodeMap = output.getStatusCodeMap();
+            assertNotNull(statusCodeMap);
+            assertEquals(new Integer(0), statusCodeMap.get(host1));
+        } catch (IOException e) {
+            e.printStackTrace();
+            fail(e.getMessage());
+        }
+    }
+
+    private void writeToFile(String password, String pwdFilePath) {
         try {
             FileWriter writer = new FileWriter(pwdFilePath);
             writer.write(password);
@@ -58,6 +80,20 @@ public class DivineCloudCliTest {
             e.printStackTrace();
             fail(e.getMessage());
         }
+    }
+
+
+    @Test
+    public void testCmdExecutePasswordCredentialsForMultipleHosts() {
+        String host1 = TestSupport.getProperty("server1.host");
+        String userName = TestSupport.getProperty("server1.username");
+        String password = TestSupport.getProperty("server1.password");
+        String host2 = TestSupport.getProperty("transient.server1.host");
+        String pwdFilePath = "/tmp/pwdfile.txt";
+        String outputFileName = "cmd-output" + System.nanoTime() + ".txt";
+        String outputFilePath = "/tmp/" + outputFileName;
+
+        writeToFile(password, pwdFilePath);
 
         String [] args = new String[]{ "-cmd", "hostname", "-nodes", "\" " + host1 + "," + host2 + "\"", "-user", userName, "-pwd", pwdFilePath, "-o", outputFilePath};
 
@@ -89,15 +125,7 @@ public class DivineCloudCliTest {
         String pwdFilePath = "/tmp/pwdfile.txt";
         String outputFileName = "cmd-output" + System.nanoTime() + ".txt";
         String outputFilePath = "/tmp/" + outputFileName;
-        try {
-            FileWriter writer = new FileWriter(pwdFilePath);
-            writer.write(password);
-            writer.flush();
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        }
+        writeToFile(password, pwdFilePath);
 
         String [] args = new String[]{ "-cmd", "\"hostname; echo Hello\"", "-nodes", "\" " + host1 + "," + host2 + "\"", "-user", userName, "-pwd", pwdFilePath, "-o", outputFilePath};
 
@@ -162,15 +190,7 @@ public class DivineCloudCliTest {
         String pwdFilePath = "/tmp/pwdfile.txt";
         File scriptFile = new File(TestSupport.getProperty("test.data.path") + "/set1", "sample.sh");
 
-        try {
-            FileWriter writer = new FileWriter(pwdFilePath);
-            writer.write(password);
-            writer.flush();
-            writer.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-            fail(e.getMessage());
-        }
+        writeToFile(password, pwdFilePath);
         String outputFileName = "cmd-output" + System.nanoTime() + ".txt";
         String outputFilePath = "/tmp/" + outputFileName;
 
