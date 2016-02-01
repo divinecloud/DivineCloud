@@ -83,7 +83,7 @@ public class RunBookApiImpl implements RunBookApi {
         } catch (IOException e) {
             throw new DcException("Cannot read Nodes Cred File : " + nodesPerStepFile.getAbsolutePath(), e);
         }
-        List<List<NodeCredentials>> nodesPerStep = NodeCredentialsFileParser.parse(nodesCredText);
+        List<List<NodeCredentials>> nodesPerStep = NodeCredentialsFileParser.parse(nodesCredText, true);
 
         return execute(nodesPerStep, runbook, callback, propertiesFile);
     }
@@ -97,7 +97,7 @@ public class RunBookApiImpl implements RunBookApi {
         } catch (IOException e) {
             throw new DcException("Cannot read Nodes Cred File : " + nodesPerStepFile.getAbsolutePath(), e);
         }
-        List<List<NodeCredentials>> nodesPerStep = NodeCredentialsFileParser.parse(nodesCredText);
+        List<List<NodeCredentials>> nodesPerStep = NodeCredentialsFileParser.parse(nodesCredText, true);
 
         String credsText;
 
@@ -150,7 +150,7 @@ public class RunBookApiImpl implements RunBookApi {
         } catch (IOException e) {
             throw new DcException("Cannot read Nodes Cred File : " + nodesPerStepFile.getAbsolutePath(), e);
         }
-        List<List<NodeCredentials>> nodesPerStep = NodeCredentialsFileParser.parse(nodesCredText);
+        List<List<NodeCredentials>> nodesPerStep = NodeCredentialsFileParser.parse(nodesCredText, true);
 
         String credsText;
 

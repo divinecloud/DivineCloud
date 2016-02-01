@@ -51,12 +51,12 @@ public class NodeCredentialsFileParser {
     /*
      * Parses the node details text. The text is expected in the following format:
      *
-     * STEP:<STEP>, ID:<NODE_DISPLAY_ID>, HOST:<HOST_NAME_OR_IP>, PORT:<PORT_NUMBER>, USERNAME:<USER_NAME>, PASSWORD:<PASSWORD>, PRIVATE_KEY:<>PRIVATE_KEY>, PASS_PHRASE:<PASS_PHRASE>, JUMP_HOST:<JUMP_HOST>, AUTH_MODE:M, PASSCODE:<PASSCODE>
+     * STEP:<STEP>, ID:<NODE_DISPLAY_ID>, HOST:<HOST_NAME_OR_IP>, PORT:<PORT_NUMBER>, USERNAME:<USER_NAME>, PASSWORD:<PASSWORD>, PRIVATE_KEY:<PRIVATE_KEY>, PASS_PHRASE:<PASS_PHRASE>, JUMP_HOST:<JUMP_HOST>, AUTH_MODE:M, PASSCODE:<PASSCODE>
      *
      * @param nodeCredentialsText - node details text
      * @return list of node details object
      */
-    public static List<List<NodeCredentials>> parse(String nodeCredentialsText) throws DcException {
+    public static List<List<NodeCredentials>> parse(String nodeCredentialsText, boolean forRunBook) throws DcException {
         Map<Integer, List<NodeCredentials>> map = new HashMap<>();
         if(nodeCredentialsText != null) {
             String[] lines = nodeCredentialsText.split("\n");
@@ -76,7 +76,7 @@ public class NodeCredentialsFileParser {
                             }
                         }
 
-                        KeyValuePair<Integer, NodeCredentials> nodeCredentialsPair = convert(columnsMap);
+                        KeyValuePair<Integer, NodeCredentials> nodeCredentialsPair = convert(columnsMap, forRunBook);
                         List<NodeCredentials> nodeCredEntry = map.get(nodeCredentialsPair.getKey());
                         if(nodeCredEntry == null) {
                             nodeCredEntry = new ArrayList<>();
@@ -133,13 +133,16 @@ public class NodeCredentialsFileParser {
     }
 
 
-    private static KeyValuePair<Integer,NodeCredentials> convert(Map<String, String> columnsMap) {
+    private static KeyValuePair<Integer,NodeCredentials> convert(Map<String, String> columnsMap, boolean forRunBook) {
         KeyValuePair<Integer, NodeCredentials> pair = new KeyValuePair<>();
         int stepNumber = Integer.parseInt(columnsMap.get(NodeCredentialKeys.STEP.name()));
         String host = columnsMap.get(NodeCredentialKeys.HOST.name());
         String username = columnsMap.get(NodeCredentialKeys.USERNAME.name());
-        if(host == null || username == null || stepNumber < 1) {
+        if(forRunBook && (host == null || username == null || stepNumber < 1)) {
             throw new DcException("Invalid Node Credentials record provided in the file : " + host + " " + username);
+        }
+        else {
+            stepNumber = 1;
         }
         NodeCredentials.Builder resultBuilder = new NodeCredentials.Builder(host, username);
 

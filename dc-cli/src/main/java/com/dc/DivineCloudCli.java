@@ -25,6 +25,7 @@ import com.dc.api.support.ExecutionIdGenerator;
 import com.dc.ssh.client.exec.cmd.script.ScriptCommand;
 import com.dc.ssh.client.exec.cmd.script.ScriptLanguage;
 import com.dc.ssh.client.exec.vo.NodeCredentials;
+import com.dc.ssh.client.support.NodeCredentialsFileParser;
 import com.dc.support.GroupCmdCliCallback;
 import com.dc.util.condition.BasicConditionalBarrier;
 
@@ -66,10 +67,19 @@ public class DivineCloudCli {
         if(args.pwdFilePath != null) {
             nodeCredentialsList = convert(nodes, args.userName, args.pwdFilePath, false);
         }
-        else {
+        else if(args.keyFilePath != null) {
             nodeCredentialsList = convert(nodes, args.userName, args.keyFilePath, true);
         }
-
+        else {
+            String nodesCredText;
+            try {
+                nodesCredText = new String(Files.readAllBytes(Paths.get(args.nodesFilePath)));
+            } catch (IOException e) {
+                throw new DcException("Cannot read Nodes Cred File : " + args.nodesFilePath, e);
+            }
+            List<List<NodeCredentials>> nodesPerStep = NodeCredentialsFileParser.parse(nodesCredText, false);
+            nodeCredentialsList = nodesPerStep.get(0);
+        }
         File outputFile = null;
         if(args.outputFile != null) {
             outputFile = new File(args.outputFile);
