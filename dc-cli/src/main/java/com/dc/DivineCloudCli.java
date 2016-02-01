@@ -26,7 +26,6 @@ import com.dc.ssh.client.exec.cmd.script.ScriptCommand;
 import com.dc.ssh.client.exec.cmd.script.ScriptLanguage;
 import com.dc.ssh.client.exec.vo.NodeCredentials;
 import com.dc.support.GroupCmdCliCallback;
-import com.dc.support.KeyValuePair;
 import com.dc.util.condition.BasicConditionalBarrier;
 
 import java.io.File;
@@ -34,7 +33,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DivineCloudCli {
     private static ExecutionIdGenerator idGenerator = new ExecutionIdGenerator();
@@ -64,7 +65,7 @@ public class DivineCloudCli {
     private static void executeCmd(CmdCliArgs args) {
         CmdApi cmdApi = new CmdApiImpl(args.batchSize);
         String[] nodes = args.nodes;
-        List<NodeCredentials> nodeCredentialsList = null;
+        List<NodeCredentials> nodeCredentialsList;
         if(args.pwdFilePath != null) {
             nodeCredentialsList = convert(nodes, args.userName, args.pwdFilePath, false);
         }
@@ -81,27 +82,28 @@ public class DivineCloudCli {
         GroupCmdCliCallback callback = new GroupCmdCliCallback(barrier, outputFile);
         cmdApi.execute(nodeCredentialsList, args.cmd, callback);
         barrier.block();
+        cmdApi.close();
     }
 
     private static List<NodeCredentials> convert(String[] nodes, String userName, String credFilePath, boolean keyBased) {
         List<NodeCredentials> result = null;
         if(nodes != null) {
             result = new ArrayList<>();
-            byte[] keyBytes = null;
+            byte[] keyBytes;
             try {
                 keyBytes = Files.readAllBytes(Paths.get(credFilePath.trim()));
+                for(String node : nodes) {
+                    NodeCredentials credentials;
+                    if(keyBased) {
+                        credentials = new NodeCredentials.Builder(node.trim(), userName.trim()).keySupport(true).privateKey(keyBytes).build();
+                    }
+                    else {
+                        credentials = new NodeCredentials.Builder(node.trim(), userName.trim()).password(new String(keyBytes)).build();
+                    }
+                    result.add(credentials);
+                }
             } catch (IOException e) {
                 printMessage("Error occurred while reading the credential file : " + credFilePath + " " + e.getMessage());
-            }
-            for(String node : nodes) {
-                NodeCredentials credentials;
-                if(keyBased) {
-                    credentials = new NodeCredentials.Builder(node.trim(), userName.trim()).keySupport(true).privateKey(keyBytes).build();
-                }
-                else {
-                    credentials = new NodeCredentials.Builder(node.trim(), userName.trim()).password(new String(keyBytes)).build();
-                }
-                result.add(credentials);
             }
         }
         return result;
@@ -110,7 +112,7 @@ public class DivineCloudCli {
     private static void executeScript(ScriptCliArgs cliArgs) {
         CmdApi cmdApi = new CmdApiImpl(cliArgs.batchSize);
         String[] nodes = cliArgs.nodes;
-        List<NodeCredentials> nodeCredentialsList = null;
+        List<NodeCredentials> nodeCredentialsList;
         if(cliArgs.pwdFilePath != null) {
             nodeCredentialsList = convert(nodes, cliArgs.userName, cliArgs.pwdFilePath, false);
         }
@@ -124,15 +126,16 @@ public class DivineCloudCli {
             outputFile = new File(cliArgs.outputFile);
         }
         GroupCmdCliCallback callback = new GroupCmdCliCallback(barrier, outputFile);
-        byte [] scriptBytes = null;
+        byte [] scriptBytes;
+        ScriptCommand scriptCommand;
         try {
             scriptBytes = Files.readAllBytes(Paths.get(cliArgs.scriptFilePath.trim()));
+            scriptCommand = new ScriptCommand(idGenerator.next(), new String(scriptBytes), ScriptLanguage.Shell, "/bin/sh");
+            cmdApi.execute(nodeCredentialsList, scriptCommand, callback);
+            barrier.block();
         } catch (IOException e) {
             printMessage("Error occurred while reading script file content. " + cliArgs.scriptFilePath + " - " + e.getMessage());
         }
-        ScriptCommand scriptCommand = new ScriptCommand(idGenerator.next(), new String(scriptBytes), ScriptLanguage.Shell, "/bin/sh");
-        cmdApi.execute(nodeCredentialsList, scriptCommand, callback);
-        barrier.block();
     }
 
     private static void executeRunBook(RunBookCliArgs cliArgs) {
@@ -162,11 +165,11 @@ public class DivineCloudCli {
         System.out.println("");
         System.out.println("Usage: dc-cli -cmd \"<command-string>\" -n <nodes-file-path> [-o <output-file-path>] [-b <batch-size>]");
         System.out.println("        or");
-        System.out.println("Usage: dc-cli -cmd \"<command-string>\" -nodes \"node1, node2, node3\" -user <username> [-key <key-file-path> | -pwd <pwd-file-path>] [-o <output-file-path>]");
+        System.out.println("Usage: dc-cli -cmd \"<command-string>\" -nodes node1,node2,node3 -user <username> [-key <key-file-path> | -pwd <pwd-file-path>] [-o <output-file-path>]");
         System.out.println("        or");
         System.out.println("Usage: dc-cli -script <script-path> -n <nodes-file-path> [-b <batch-size>] [-a <arguments>] [-o <output-file-path>]");
         System.out.println("        or");
-        System.out.println("Usage: dc-cli -script <script-path> -user <username> [-key <key-file-path> | -pwd <pwd-file-path>] -nodes \"node1, node2, node3\" [-b <batch-size>] [-a <arguments>] [-o <output-file-path>]");
+        System.out.println("Usage: dc-cli -script <script-path> -user <username> [-key <key-file-path> | -pwd <pwd-file-path>] -nodes node1,node2,node3 [-b <batch-size>] [-a <arguments>] [-o <output-file-path>]");
         System.out.println("        or");
         System.out.println("Usage: dc-cli -runbook <runBook-path> -n <nodes-per-step-file-path> [-p <properties-file-path>] [-c <credential-file-path>] [-o <output-file-path>] [-b <batch-size>]");
         System.out.println("        or");
@@ -176,305 +179,118 @@ public class DivineCloudCli {
 
     private static CliArgs parse(String[] args) {
         CliArgs result = null;
-        String arguments = concat(args);
 
-        KeyValuePair<String,String> nodesData = null;
-        if(arguments.indexOf(" -nodes ") > 0) {
-            nodesData = parseNodes(arguments);
+        Map<String, String> argsMap = convertToMap(args);
+
+
+        if(argsMap.containsKey("-runbook")) {
+            result = parseRunBook(argsMap);
         }
-
-        String cmdString = arguments;
-        if(nodesData != null) {
-            cmdString = nodesData.getValue();
+        else if(argsMap.containsKey("-script")) {
+            result = parseScript(argsMap);
         }
-
-
-        if(cmdString.contains("-runbook ")) {
-            result = parseRunBook(cmdString.split(" "));
-        }
-        else if(cmdString.contains("-script ")) {
-            KeyValuePair<String,String> argData;
-            if(nodesData != null) {
-                argData = parseArguments(cmdString);
-            }
-            else {
-                argData = parseArguments(arguments);
-            }
-
-            if(argData.getValue() != null) {
-                cmdString = argData.getValue();
-            }
-            result = parseScript(cmdString.split(" "));
-
-            if(argData != null && argData.getKey() != null && argData.getKey().length() > 0) {
-                ((ScriptCliArgs)result).arguments = argData.getKey();
-            }
-
-        }
-        else if(cmdString.contains("-cmd ")) {
-            KeyValuePair<String,String> cmdLinePair = parseCmdLine(cmdString);
-
-            result = parseCmd(cmdLinePair);
+        else if(argsMap.containsKey("-cmd")) {
+            result = parseCmd(argsMap);
         }
         else {
             printMessage("Invalid Arguments provided");
         }
+        return result;
+    }
 
-        if(nodesData != null && nodesData.getKey() != null) {
-            String[] nodes = nodesData.getKey().split(",");
-            result.nodes = nodes;
+
+    private static Map<String, String> convertToMap(String [] args) {
+        Map<String, String> result = new HashMap<>();
+        int size = args.length;
+        int currentIndex = 0;
+        while(currentIndex < size) {
+            String key = args[currentIndex++];
+            String value = args[currentIndex++];
+            result.put(key, value);
         }
         return result;
     }
 
-    private static KeyValuePair<String, String> parseCmdLine(String args) {
-        KeyValuePair<String, String> result = new KeyValuePair<>();
-        if(args.contains("-cmd ")) {
-            int startIndex = args.indexOf("-cmd ");
-            int nodesStartIndex = startIndex + 5;
-            String subString = args.substring(nodesStartIndex);
-            if(subString.trim().startsWith("\"")) {
-                int doubleQuoteStart = findDoubleQuoteIndex(subString);
-                String remainingSubString = subString.substring(doubleQuoteStart + 1);
-                int doubleQuoteEnd = findDoubleQuoteIndex(remainingSubString);
-                result.setKey(subString.substring(doubleQuoteStart + 1, doubleQuoteEnd + 1));
-                String prunedString = args.substring(0, startIndex) + subString.substring(doubleQuoteEnd + 3);
-                result.setValue(prunedString);
+    private static String trim(String str) {
+        String result = str;
+        if(str != null) {
+            result = str.trim();
+        }
+        return result;
+    }
 
+    private static void parseCliArguments(CliArgs result, Map<String, String> argsMap) {
+        result.userName = trim(argsMap.get("-user"));
+        result.keyFilePath = trim(argsMap.get("-key"));
+        result.pwdFilePath = trim(argsMap.get("-pwd"));
+        result.nodesFilePath = trim(argsMap.get("-n"));
+        result.propertiesFile = trim(argsMap.get("-p"));
+        result.outputFile = trim(argsMap.get("-o"));
+        try {
+            String batchSizeStr = trim(argsMap.get("-b"));
+            if(batchSizeStr != null && batchSizeStr.trim().length() > 0) {
+                result.batchSize = Integer.parseInt(batchSizeStr);
             }
             else {
-                int wordEndIndex = subString.indexOf(" ");
-                result.setKey(subString.substring(0, wordEndIndex));
-                String prunedString = args.substring(0, startIndex) + subString.substring(wordEndIndex + 1);
-                result.setValue(prunedString);
+                result.batchSize = 5;
             }
         }
-
-        return result;
-    }
-
-    private static CliArgs parseCmd(KeyValuePair<String, String> pair) {
-        String[] args = pair.getValue().split(" ");
-        String cmdLine = pair.getKey();
-        CmdCliArgs result = new CmdCliArgs();
-        result.cmd = cmdLine;
-        int currentPointer = 0;
-        while (currentPointer < args.length) {
-            String type = args[currentPointer].trim();
-            switch (type) {
-                case "-user":
-                    result.userName = args[++currentPointer];
-                    break;
-                case "-key":
-                    result.keyFilePath = args[++currentPointer];
-                    break;
-                case "-pwd":
-                    result.pwdFilePath = args[++currentPointer];
-                    break;
-                case "-n":
-                    result.nodesFilePath = args[++currentPointer];
-                    break;
-                case "-o":
-                    result.outputFile = args[++currentPointer];
-                    break;
-                case "-b":
-                    try {
-                        result.batchSize = Integer.parseInt(args[++currentPointer]);
-                    } catch (Exception e) {
-                        printMessage("Invalid batch-size provided");
-                    }
-                    break;
-                case "":
-                    break;
-                default:
-                    System.out.println("warning: " + type + " not recognized");
-            }
-            ++currentPointer;
-
+        catch(Exception e) {
+            printMessage("Invalid batch-size provided");
         }
+
         if(result.pwdFilePath != null) {
             validateFile(result.pwdFilePath, "Password file path is invalid. ");
         }
         else {
             validateFile(result.keyFilePath, "Private Key file path is invalid. ");
         }
-        return result;
 
+        String nodesStr = argsMap.get("-nodes");
+        if(nodesStr != null && nodesStr.trim().length() > 0) {
+            String [] args = nodesStr.split(",");
+            String [] nodes = null;
+            if(args != null) {
+                nodes = new String[args.length];
+                for(int i=0; i<args.length; i++) {
+                    nodes[i] = trim(args[i]);
+                }
+            }
+            result.nodes = nodes;
+        }
     }
 
-    private static CliArgs parseScript(String[] args) {
+    private static RunBookCliArgs parseRunBook(Map<String, String> argsMap) {
+        RunBookCliArgs result = new RunBookCliArgs();
+        parseCliArguments(result, argsMap);
+        result.runbookFile = argsMap.get("-runbook");
+        result.credentialsProviderFile = argsMap.get("-c");
+        validateFile(result.runbookFile, "RunBook file path is invalid. ");
+        return result;
+    }
+
+    private static ScriptCliArgs parseScript(Map<String, String> argsMap) {
         ScriptCliArgs result = new ScriptCliArgs();
-        int currentPointer = 0;
-        while (currentPointer < args.length) {
-            String type = args[currentPointer].trim();
-            switch (type) {
-                case "-script":
-                    result.scriptFilePath = args[++currentPointer];
-                    break;
-                case "-user":
-                    result.userName = args[++currentPointer];
-                    break;
-                case "-key":
-                    result.keyFilePath = args[++currentPointer];
-                    break;
-                case "-pwd":
-                    result.pwdFilePath = args[++currentPointer];
-                    break;
-                case "-n":
-                    result.nodesFilePath = args[++currentPointer];
-                    break;
-                case "-p":
-                    result.propertiesFile = args[++currentPointer];
-                    break;
-                case "-o":
-                    result.outputFile = args[++currentPointer];
-                    break;
-                case "-b":
-                    try {
-                        result.batchSize = Integer.parseInt(args[++currentPointer]);
-                    } catch (Exception e) {
-                        printMessage("Invalid batch-size provided");
-                    }
-                    break;
-                case "":
-                    break;
-                default:
-                    printMessage("Invalid argument specified : " + type);
-            }
-            ++currentPointer;
-
-        }
-
+        parseCliArguments(result, argsMap);
+        result.scriptFilePath = argsMap.get("-script");
+        result.arguments = argsMap.get("-a");
         validateFile(result.scriptFilePath, "Script file path is invalid. ");
         return result;
     }
 
-    private static String concat(String[] args) {
-        String result = "";
-        for(String arg : args) {
-            if(result.equals("")) {
-                result = arg;
-            }
-            else {
-                result = result + " " + arg;
-            }
-        }
+    private static CmdCliArgs parseCmd(Map<String, String> argsMap) {
+        CmdCliArgs result = new CmdCliArgs();
+        parseCliArguments(result, argsMap);
+        result.cmd = argsMap.get("-cmd");
         return result;
     }
 
-    private static RunBookCliArgs parseRunBook(String[] args) {
-        RunBookCliArgs result = new RunBookCliArgs();
-        int currentPointer = 0;
-        while(currentPointer < args.length) {
-            String type = args[currentPointer].trim();
-            switch(type) {
-                case "-runbook" :
-                    result.runbookFile = args[++currentPointer];
-                    break;
-                case "-user":
-                    result.userName = args[++currentPointer];
-                    break;
-                case "-key":
-                    result.keyFilePath = args[++currentPointer];
-                    break;
-                case "-pwd":
-                    result.pwdFilePath = args[++currentPointer];
-                    break;
-                case "-n" :
-                    result.nodesFilePath = args[++currentPointer];
-                    break;
-                case "-p" :
-                    result.propertiesFile = args[++currentPointer];
-                    break;
-                case "-c" :
-                    result.credentialsProviderFile = args[++currentPointer];
-                    break;
-                case "-o" :
-                    result.outputFile = args[++currentPointer];
-                    break;
-                case "-b" :
-                    try {
-                        result.batchSize = Integer.parseInt(args[++currentPointer]);
-                    }
-                    catch(Exception e) {
-                        printMessage("Invalid batch-size provided");
-                    }
-                case "" :
-                    break;
-                default:
-                    printMessage("Invalid argument specified : " + type);
-            }
-            ++currentPointer;
-
-        }
-
-        validateFile(result.runbookFile, "RunBook file path is invalid. ");
-
-        return result;
-    }
-
-    private static boolean isInline(String[] args) {
-        boolean result = false;
-        for(String arg : args) {
-            if(arg.contains("-nodes ")) {
-                result = true;
-                break;
-            }
-        }
-        return result;
-    }
-
-
-    public static KeyValuePair<String,String> parseNodes(String args) {
-        KeyValuePair<String,String> result = new KeyValuePair<>();
-        if(args.contains("-nodes ")) {
-            int startIndex = args.indexOf("-nodes ");
-            int nodesStartIndex = startIndex + 7;
-            String subString = args.substring(nodesStartIndex);
-            int doubleQuoteStart = subString.indexOf("\"");
-            String remainingSubString = subString.substring(doubleQuoteStart + 1);
-            int doubleQuoteEnd = remainingSubString.indexOf("\"");
-            result.setKey(subString.substring(doubleQuoteStart + 1, doubleQuoteEnd + 1));
-            String prunedString = args.substring(0, startIndex) + subString.substring(doubleQuoteEnd + 3);
-            result.setValue(prunedString);
-        }
-
-        return result;
-    }
-
-    public static KeyValuePair<String,String> parseArguments(String args) {
-        KeyValuePair<String,String> result = new KeyValuePair<>();
-        if(args.contains(" -a ")) {
-            int startIndex = args.indexOf(" -a ");
-            int nodesStartIndex = startIndex + 4;
-            String subString = args.substring(nodesStartIndex);
-            int doubleQuoteStart = findDoubleQuoteIndex(subString);
-            String remainingSubString = subString.substring(doubleQuoteStart + 1);
-            int doubleQuoteEnd = findDoubleQuoteIndex(remainingSubString);
-            result.setKey(subString.substring(doubleQuoteStart + 1, doubleQuoteEnd + 4));
-            String prunedString = args.substring(0, startIndex) + subString.substring(doubleQuoteEnd + 5);
-            result.setValue(prunedString);
-        }
-
-        return result;
-    }
-
-    private static int findDoubleQuoteIndex(String line) {
-        int doubleQuoteIndex = line.indexOf("\"");
-        if(doubleQuoteIndex > 0) {
-            if(line.charAt(doubleQuoteIndex - 1) == '\\') {
-                doubleQuoteIndex += findDoubleQuoteIndex(line.substring(doubleQuoteIndex + 1));
-            }
-        }
-        return doubleQuoteIndex;
-    }
 }
 
 class CliArgs {
     String outputFile;
     String propertiesFile;
     String nodesFilePath;
-    boolean emitOutput;
     int batchSize = 100;
     String[] nodes;
     String keyFilePath;

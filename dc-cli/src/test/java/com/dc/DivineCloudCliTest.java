@@ -50,7 +50,7 @@ public class DivineCloudCliTest {
 
         writeToFile(password, pwdFilePath);
 
-        String [] args = new String[]{ "-cmd", "hostname", "-nodes", "\" " + host1 + "\"", "-user", userName, "-pwd", pwdFilePath, "-o", outputFilePath};
+        String [] args = new String[]{ "-cmd", "hostname", "-nodes", host1, "-user", userName, "-pwd", pwdFilePath, "-o", outputFilePath};
 
         DivineCloudCli.main(args);
         ObjectMapper reader = new ObjectMapper();
@@ -295,9 +295,11 @@ public class DivineCloudCliTest {
             fail(e.getMessage());
         }
 
+        /*
         RunBookApiTestSupport.deleteFile(testPropsFolder, propertiesFile.getName());
         RunBookApiTestSupport.deleteFile(credDestinationFolder, credFileName);
         RunBookApiTestSupport.deleteFile(nodeCredDestinationFolder, nodeCredFileName);
         RunBookApiTestSupport.deleteFile("/tmp", "routput.txt");
+        */
     }
 }

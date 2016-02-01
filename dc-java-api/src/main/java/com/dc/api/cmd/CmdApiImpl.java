@@ -123,6 +123,11 @@ public class CmdApiImpl implements CmdApi {
         return result;
     }
 
+    @Override
+    public void close() {
+        sshClientAccessor.close();
+    }
+
     public String execute(List<NodeCredentials> nodeCredentials, String command, GroupTermCallback groupTermCallback) {
         String execId = idGenerator.next();
         SingleSshCommand singleSshCommand = new SingleSshCommand(execId, command);

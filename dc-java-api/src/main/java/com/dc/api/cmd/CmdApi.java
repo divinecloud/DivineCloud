@@ -37,4 +37,5 @@ public interface CmdApi {
 
     public void cancel(List<NodeCredentials> nodeCredentials, String executionId);
 
+    public void close();
 }

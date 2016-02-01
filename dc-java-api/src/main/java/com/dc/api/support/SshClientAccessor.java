@@ -53,6 +53,10 @@ public class SshClientAccessor {
         return connected;
     }
 
+    public void close() {
+        sshClientCache.forEach((k,v) -> {v.close();});
+    }
+
     public boolean isIdle(String nodeId) {
         boolean idle = false;
         if (sshClientCache.containsKey(nodeId)) {
