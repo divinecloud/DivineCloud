@@ -59,7 +59,7 @@ public class NodeCredentialsFileParserTest {
 
         String nodeCredentialsText = record1 + '\n' + record2 + '\n' + record3;
 
-        List<List<NodeCredentials>> result = NodeCredentialsFileParser.parse(nodeCredentialsText);
+        List<List<NodeCredentials>> result = NodeCredentialsFileParser.parse(nodeCredentialsText, true);
 
         assertNotNull(result);
         assertEquals(3, result.size());
